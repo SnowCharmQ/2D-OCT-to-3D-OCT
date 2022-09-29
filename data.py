@@ -2,14 +2,13 @@ import torch
 import numpy as np
 import pandas as pd
 from PIL import Image
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 
 
 class Oct3dDataset(Dataset):
-    def __init__(self, file_path, num_views, input_height, input_width,
+    def __init__(self, file_path, input_height, input_width,
                  output_height, output_width, transform=None):
         self.df = pd.read_csv(file_path)
-        self.num_views = num_views
         self.input_height = input_height
         self.input_width = input_width
         self.output_height = output_height
@@ -20,7 +19,7 @@ class Oct3dDataset(Dataset):
         return len(self.df)
 
     def __getitem__(self, idx):
-        projs = np.zeros((self.input_width, self.input_height, self.num_views), dtype=np.int8)
+        projs = np.zeros((self.input_width, self.input_height, 1), dtype=np.int8)
 
         proj_path = self.df.iloc[idx]['2D_data_path']
         proj = Image.open(proj_path)
@@ -39,3 +38,10 @@ class Oct3dDataset(Dataset):
         volume = torch.from_numpy(volume)
 
         return projs, volume
+
+
+def get_data_loader(file_path, input_height, input_width, output_height, output_width,
+                    transform, batch_size, num_workers):
+    dataset = Oct3dDataset(file_path, input_height, input_width, output_height, output_width, transform)
+    loader = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers, pin_memory=True)
+    return loader
