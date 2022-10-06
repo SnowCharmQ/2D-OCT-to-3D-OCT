@@ -1,7 +1,7 @@
-import cv2
 import torch
 import numpy as np
 import pandas as pd
+from PIL import Image
 from torch.utils.data import Dataset, DataLoader
 
 
@@ -19,13 +19,11 @@ class Oct3dDataset(Dataset):
         return len(self.df)
 
     def __getitem__(self, idx):
-        projs = np.zeros((self.input_width, self.input_height, 1), dtype=np.int8)
+        projs = np.zeros((self.input_width, self.input_height, 1), dtype=np.float32)
 
         proj_path = self.df.iloc[idx]['2D_data_path']
-        proj = cv2.imread(proj_path)
-        proj = cv2.cvtColor(proj, cv2.COLOR_BGR2GRAY)
-        proj = cv2.resize(proj, (128, 128))
-        projs[:, :, 0] = np.array(proj)
+        proj = Image.open(proj_path).resize((self.input_height, self.input_width))
+        projs[:, :, 0] = np.array(proj, dtype=np.float32)[:, :, 0]
 
         if self.transform:
             projs = self.transform(projs)
@@ -43,7 +41,7 @@ class Oct3dDataset(Dataset):
 
 
 def get_data_loader(file_path, input_height, input_width, output_height, output_width,
-                    transform, batch_size, num_workers=None):
+                    transform, batch_size, num_workers=4):
     dataset = Oct3dDataset(file_path, input_height, input_width, output_height, output_width, transform)
-    loader = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers, pin_memory=True)
+    loader = DataLoader(dataset=dataset, batch_size=batch_size, num_workers=num_workers, shuffle=True, pin_memory=True)
     return loader

@@ -41,3 +41,4 @@ def generate():
     df = pd.DataFrame(data)
     data_path = os.path.join(path, "data_path.csv")
     df.to_csv(data_path, index=False)
+    print("Successfully Generating the data!")

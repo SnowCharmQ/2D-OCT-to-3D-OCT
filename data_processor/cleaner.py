@@ -34,5 +34,6 @@ def clean():
     file_path = "data_path.csv"
     if os.path.exists(file_path):
         os.remove(file_path)
+        print("Successfully delete {}!".format(file_path))
 
     print("Successfully delete all volume.npy files!")

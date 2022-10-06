@@ -2,19 +2,27 @@ import os.path
 
 from torchvision import transforms
 from torch.autograd import Variable
+from data_processor.cleaner import clean
 from data_processor.generator import generate
 
 from data import *
 from net import *
 from utils import AverageMeter
 
+clean()
+
 file_path = "data_path.csv"
 if not os.path.exists(file_path):
     generate()
-input_height = 543
-input_width = 543
-output_height = 885
-output_width = 512
+
+# input_height = 543
+# input_width = 543
+# output_height = 885
+# output_width = 512
+input_height = 128
+input_width = 128
+output_height = 128
+output_width = 128
 transform = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize((0.1307,), (0.3081,))
@@ -30,7 +38,8 @@ train_loader = get_data_loader(file_path=file_path,
                                output_height=output_height,
                                output_width=output_width,
                                transform=transform,
-                               batch_size=10)
+                               batch_size=10,
+                               num_workers=4)
 
 epochs = 50
 print_freq = 5
@@ -74,4 +83,4 @@ for epoch in range(epochs):
                  }
         filename = os.path.join(os.getcwd(), "model", "model.pth.tar")
         torch.save(state, filename)
-        print(f"! Save the best model in epoch: {epoch}, the current loss: {best_loss}")
+        print("! Save the best model in epoch: {}, the current loss: {}".format(epoch, best_loss))
