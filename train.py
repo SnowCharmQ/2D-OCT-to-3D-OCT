@@ -1,13 +1,11 @@
 import os.path
 
-import torch.nn as nn
 from torchvision import transforms
 from torch.autograd import Variable
 from data_processor.generator import generate
-from data_processor.cleaner import clean
 
 from data import *
-from net import OctNet
+from net import *
 from utils import AverageMeter
 
 file_path = "data_path.csv"
@@ -20,10 +18,11 @@ output_width = 512
 transform = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize((0.1307,), (0.3081,))
-])  # editable
-model = OctNet()  # editable
-optimizer = torch.optim.Adam(model.parameters(), lr=0.01, betas=(0.5, 0.999))  # editable
-criterion = nn.SmoothL1Loss()  # editable
+])
+model = ReconNet()
+model = nn.DataParallel(model).cuda()
+optimizer = torch.optim.Adam(model.parameters(), lr=0.01, betas=(0.5, 0.999))
+criterion = nn.MSELoss(reduction="mean")
 
 train_loader = get_data_loader(file_path=file_path,
                                input_height=input_height,
@@ -33,14 +32,17 @@ train_loader = get_data_loader(file_path=file_path,
                                transform=transform,
                                batch_size=10)
 
-epochs = 50  # editable
-print_freq = 5  # editable
+epochs = 50
+print_freq = 5
+best_loss = 1e5
 for epoch in range(epochs):
     train_loss = AverageMeter()
     model.train()
 
     for i, (input, target) in enumerate(train_loader):
         input_var, target_val = Variable(input), Variable(target)
+        input_var = input_var.cuda()
+        target_val = target_val.cuda()
 
         output = model(input_var)
 
@@ -61,3 +63,15 @@ for epoch in range(epochs):
     print('Finish Epoch: [{0}]\t'
           'Average Train Loss: {loss.avg:.5f}\t'.format(
         epoch, loss=train_loss))
+
+    if train_loss.avg < best_loss:
+        best_loss = train_loss.avg
+        state = {'epoch': epoch + 1,
+                 'model': 'ReconNet',
+                 'state_dict': model.state_dict(),
+                 'loss': best_loss,
+                 'optimizer': optimizer.state_dict()
+                 }
+        filename = os.path.join(os.getcwd(), "model", "model.pth.tar")
+        torch.save(state, filename)
+        print(f"! Save the best model in epoch: {epoch}, the current loss: {best_loss}")
