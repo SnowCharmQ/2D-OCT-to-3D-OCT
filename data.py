@@ -1,7 +1,7 @@
+import cv2
 import torch
 import numpy as np
 import pandas as pd
-from PIL import Image
 from torch.utils.data import Dataset, DataLoader
 
 
@@ -22,7 +22,9 @@ class Oct3dDataset(Dataset):
         projs = np.zeros((self.input_width, self.input_height, 1), dtype=np.int8)
 
         proj_path = self.df.iloc[idx]['2D_data_path']
-        proj = Image.open(proj_path)
+        proj = cv2.imread(proj_path)
+        proj = cv2.cvtColor(proj, cv2.COLOR_BGR2GRAY)
+        proj = cv2.resize(proj, (128, 128))
         projs[:, :, 0] = np.array(proj)
 
         if self.transform:

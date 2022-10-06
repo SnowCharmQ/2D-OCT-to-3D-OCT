@@ -11,11 +11,11 @@ def generate_data_path(path: str):
             tif_path = os.path.join(path, filename)
         elif suffix == '.fda_OCT_pngs':
             images_path = os.path.join(path, filename)
-            volume = np.zeros((128, 885, 512), dtype=np.int64)
-            for i in range(128):
+            volume = np.zeros((46, 128, 128), dtype=np.int64)
+            for i in range(46):
                 oct_path = f"octscan_{i + 1}.png"
                 oct_path = os.path.join(images_path, oct_path)
-                img = Image.open(oct_path)
+                img = Image.open(oct_path).resize((128, 128))
                 img = np.array(img)
                 volume[i, :, :] = img
             volume_path = os.path.join(path, "volume.npy")

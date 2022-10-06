@@ -161,7 +161,7 @@ def _initialize_weights(net):
 
 class ReconNet(nn.Module):
 
-    def __init__(self, in_channels=1, out_channels=0):
+    def __init__(self, in_channels=1, out_channels=46):
         super(ReconNet, self).__init__()
 
         ######### representation network - convolution layers
