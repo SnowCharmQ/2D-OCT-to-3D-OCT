@@ -28,9 +28,10 @@ transform = transforms.Compose([
     transforms.Normalize((0.1307,), (0.3081,))
 ])
 model = ReconNet()
-model = nn.DataParallel(model).cuda()
+# model = nn.DataParallel(model).cuda()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.01, betas=(0.5, 0.999))
 criterion = nn.MSELoss(reduction="mean")
+# criterion = criterion.cuda()
 
 train_loader = get_data_loader(file_path=file_path,
                                input_height=input_height,
@@ -38,8 +39,7 @@ train_loader = get_data_loader(file_path=file_path,
                                output_height=output_height,
                                output_width=output_width,
                                transform=transform,
-                               batch_size=10,
-                               num_workers=4)
+                               batch_size=10)
 
 epochs = 50
 print_freq = 5
@@ -51,10 +51,10 @@ for epoch in range(epochs):
 
     for i, (input, target) in enumerate(train_loader):
         input_var, target_val = Variable(input), Variable(target)
-        input_var = input_var.cuda()
-        target_val = target_val.cuda()
+        # input_var = input_var.cuda()
+        # target_val = target_val.cuda()
 
-        output = model(input_var)
+        output = model(input_var).float()
 
         loss = criterion(output, target_val)
         train_loss.update(loss.data.item(), input.size(0))

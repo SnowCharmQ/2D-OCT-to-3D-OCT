@@ -35,13 +35,13 @@ class Oct3dDataset(Dataset):
         volume = volume / np.max(volume)
         assert ((np.max(volume) - 1.0 < 1e-3) and (np.min(volume) < 1e-3))
 
-        volume = torch.from_numpy(volume)
+        volume = torch.from_numpy(volume).float()
 
         return projs, volume
 
 
 def get_data_loader(file_path, input_height, input_width, output_height, output_width,
-                    transform, batch_size, num_workers=4):
+                    transform, batch_size):
     dataset = Oct3dDataset(file_path, input_height, input_width, output_height, output_width, transform)
-    loader = DataLoader(dataset=dataset, batch_size=batch_size, num_workers=num_workers, shuffle=True, pin_memory=True)
+    loader = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=True, pin_memory=True)
     return loader
