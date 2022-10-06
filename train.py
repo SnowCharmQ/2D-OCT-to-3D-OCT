@@ -44,6 +44,7 @@ train_loader = get_data_loader(file_path=file_path,
 epochs = 50
 print_freq = 5
 best_loss = 1e5
+print("Start training...")
 for epoch in range(epochs):
     train_loss = AverageMeter()
     model.train()
