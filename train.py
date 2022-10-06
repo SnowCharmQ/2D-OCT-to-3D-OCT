@@ -1,5 +1,6 @@
 import os.path
 
+import gc
 from torchvision import transforms
 from torch.autograd import Variable
 from data_processor.cleaner import clean
@@ -9,7 +10,8 @@ from data import *
 from net import *
 from utils import AverageMeter
 
-clean()
+os.environ['CUDA_VISIBLE_DEVICES'] = '1,3,7'
+# clean()
 
 file_path = "data_path.csv"
 if not os.path.exists(file_path):
@@ -28,10 +30,10 @@ transform = transforms.Compose([
     transforms.Normalize((0.1307,), (0.3081,))
 ])
 model = ReconNet()
-# model = nn.DataParallel(model).cuda()
+model = nn.DataParallel(model).cuda()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.01, betas=(0.5, 0.999))
 criterion = nn.MSELoss(reduction="mean")
-# criterion = criterion.cuda()
+criterion = criterion.cuda()
 
 train_loader = get_data_loader(file_path=file_path,
                                input_height=input_height,
@@ -39,7 +41,7 @@ train_loader = get_data_loader(file_path=file_path,
                                output_height=output_height,
                                output_width=output_width,
                                transform=transform,
-                               batch_size=10)
+                               batch_size=4)
 
 epochs = 50
 print_freq = 5
@@ -51,8 +53,8 @@ for epoch in range(epochs):
 
     for i, (input, target) in enumerate(train_loader):
         input_var, target_val = Variable(input), Variable(target)
-        # input_var = input_var.cuda()
-        # target_val = target_val.cuda()
+        input_var = input_var.cuda()
+        target_val = target_val.cuda()
 
         output = model(input_var).float()
 
@@ -85,3 +87,5 @@ for epoch in range(epochs):
         filename = os.path.join(os.getcwd(), "model", "model.pth.tar")
         torch.save(state, filename)
         print("! Save the best model in epoch: {}, the current loss: {}".format(epoch, best_loss))
+    gc.collect()
+    torch.cuda.empty_cache()

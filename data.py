@@ -43,5 +43,5 @@ class Oct3dDataset(Dataset):
 def get_data_loader(file_path, input_height, input_width, output_height, output_width,
                     transform, batch_size):
     dataset = Oct3dDataset(file_path, input_height, input_width, output_height, output_width, transform)
-    loader = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=True, pin_memory=True)
+    loader = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=True, pin_memory=False)
     return loader
