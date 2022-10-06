@@ -1,34 +1,38 @@
 import argparse
-import os.path
 from concurrent.futures import *
 
 from utils import *
 from exceptions import *
 
-path = os.getcwd()
-parent_path = os.path.dirname(path)
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--filename", "-f", default="for_chuangxinshijian")
-args = parser.parse_args()
+def clean():
+    path = os.getcwd()
 
-data_dir = None
-for filename in os.listdir(parent_path):
-    if filename == args.filename:
-        data_dir = os.listdir(os.path.join(parent_path, filename))
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--filename", "-f", default="for_chuangxinshijian")
+    args = parser.parse_args()
 
-if data_dir is None:
-    raise DataDirNotDetectedError("The directory for the data doesn't detect in the current directory!")
+    data_dir = None
+    for filename in os.listdir(path):
+        if filename == args.filename:
+            data_dir = os.listdir(os.path.join(path, filename))
 
-ignore_dirs = ['cf', 'log']
-data_dir = [os.path.join(parent_path, args.filename, sub_dir) for sub_dir in data_dir if sub_dir not in ignore_dirs]
+    if data_dir is None:
+        raise DataDirNotDetectedError("The directory for the data doesn't detect in the current directory!")
 
-with ThreadPoolExecutor(max_workers=40) as t:
-    obj_list = []
-    for sub_dir in data_dir:
-        obj = t.submit(clean_data_npy, sub_dir)
-        obj_list.append(obj)
-    for obj in as_completed(obj_list):
-        result = obj.result()
+    ignore_dirs = ['cf', 'log']
+    data_dir = [os.path.join(path, args.filename, sub_dir) for sub_dir in data_dir if sub_dir not in ignore_dirs]
 
-print("Successfully delete all volume.npy files!")
+    with ThreadPoolExecutor(max_workers=40) as t:
+        obj_list = []
+        for sub_dir in data_dir:
+            obj = t.submit(clean_data_npy, sub_dir)
+            obj_list.append(obj)
+        for obj in as_completed(obj_list):
+            obj.result()
+
+    file_path = "data_path.csv"
+    if os.path.exists(file_path):
+        os.remove(file_path)
+
+    print("Successfully delete all volume.npy files!")

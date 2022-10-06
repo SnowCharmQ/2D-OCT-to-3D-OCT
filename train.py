@@ -1,12 +1,18 @@
+import os.path
+
 import torch.nn as nn
 from torchvision import transforms
 from torch.autograd import Variable
+from data_processor.generator import generate
+from data_processor.cleaner import clean
 
 from data import *
 from net import OctNet
 from utils import AverageMeter
 
 file_path = "data_path.csv"
+if not os.path.exists(file_path):
+    generate()
 input_height = 543
 input_width = 543
 output_height = 885
@@ -15,7 +21,6 @@ transform = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize((0.1307,), (0.3081,))
 ])  # editable
-
 model = OctNet()  # editable
 optimizer = torch.optim.Adam(model.parameters(), lr=0.01, betas=(0.5, 0.999))  # editable
 criterion = nn.SmoothL1Loss()  # editable
@@ -30,7 +35,6 @@ train_loader = get_data_loader(file_path=file_path,
 
 epochs = 50  # editable
 print_freq = 5  # editable
-
 for epoch in range(epochs):
     train_loss = AverageMeter()
     model.train()
