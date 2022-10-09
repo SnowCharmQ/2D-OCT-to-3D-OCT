@@ -15,7 +15,9 @@ def generate_data_path(path: str):
             for i in range(46):
                 oct_path = f"octscan_{i + 1}.png"
                 oct_path = os.path.join(images_path, oct_path)
-                img = Image.open(oct_path).resize((128, 128))
+                img = Image.open(oct_path)
+                img = img.crop((0, 30, 512, 542))
+                img = img.resize((128, 128))
                 img = np.array(img, dtype=np.float32)
                 volume[i, :, :] = img
             volume_path = os.path.join(path, "volume.npy")
