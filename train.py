@@ -1,5 +1,3 @@
-import os.path
-
 import gc
 import time
 
@@ -10,10 +8,10 @@ from data_processor.generator import generate
 
 from data import *
 from net import *
-from utils import AverageMeter
+from utils import *
 
 clean()
-
+# exit(0)
 file_path = "data_path.csv"
 if not os.path.exists(file_path):
     generate()
@@ -31,11 +29,11 @@ transform = transforms.Compose([
     transforms.Normalize((0.1307,), (0.3081,))
 ])
 model = ReconNet()
+# model = nn.DataParallel(model)
 # model = model.cuda()
-# model = nn.DataParallel(model).cuda()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.01, betas=(0.5, 0.999))
 criterion = nn.MSELoss(reduction="mean")
-# criterion = criterion.cuda()
+criterion = criterion.cuda()
 
 train_loader = get_data_loader(file_path=file_path,
                                input_height=input_height,
@@ -43,7 +41,7 @@ train_loader = get_data_loader(file_path=file_path,
                                output_height=output_height,
                                output_width=output_width,
                                transform=transform,
-                               batch_size=1)
+                               batch_size=4)
 
 epochs = 50
 print_freq = 5
@@ -74,6 +72,7 @@ for epoch in range(epochs):
                   'Train Loss: {loss.val:.5f} ({loss.avg:.5f})\t'.format(
                 epoch, i, len(train_loader),
                 loss=train_loss))
+            save_volumetric_images(epoch, i, output)
 
     print('Finish Epoch: [{0}]\t'
           'Average Train Loss: {loss.avg:.5f}\t'.format(

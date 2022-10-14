@@ -34,6 +34,24 @@ def clean_data_npy(path: str):
             os.remove(filename)
 
 
+def save_volumetric_images(epoch, i, output):
+    def get_file_path(j, k):
+        current_path = os.getcwd()
+        dic_path = "img"
+        if not os.path.exists(dic_path):
+            os.mkdir(dic_path)
+        img_path = "epoch%s_iter%s_batch%s_no%s.png" % (epoch, i, j, k)
+        file_path = os.path.join(current_path, dic_path, img_path)
+        return file_path
+
+    output = output.detach().numpy()
+    for j in range(len(output)):
+        for k in range(len(output[j])):
+            img = output[j][k]
+            Image.fromarray(img).convert("L").save(get_file_path(j, k))
+    print("Saved images")
+
+
 class AverageMeter:
     def __init__(self):
         self.val = 0
