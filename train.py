@@ -11,7 +11,6 @@ from net import *
 from utils import *
 
 clean()
-# exit(0)
 file_path = "data_path.csv"
 if not os.path.exists(file_path):
     generate()
@@ -53,6 +52,7 @@ for epoch in range(epochs):
     model.train()
 
     for i, (input, target) in enumerate(train_loader):
+        save_volumetric_images(epoch, i, target, 'target')
         input_var, target_val = Variable(input), Variable(target)
         # input_var = input_var.cuda()
         # target_val = target_val.cuda()

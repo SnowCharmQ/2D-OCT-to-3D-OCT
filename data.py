@@ -31,9 +31,9 @@ class Oct3dDataset(Dataset):
         vol_path = self.df.iloc[idx]['3D_data_path']
         volume = np.load(vol_path)
 
-        volume = volume - np.min(volume)
-        volume = volume / np.max(volume)
-        assert ((np.max(volume) - 1.0 < 1e-3) and (np.min(volume) < 1e-3))
+        # volume = volume - np.min(volume)
+        # volume = volume / np.max(volume)
+        # assert ((np.max(volume) - 1.0 < 1e-3) and (np.min(volume) < 1e-3))
 
         volume = torch.from_numpy(volume).float()
 
