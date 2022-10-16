@@ -52,7 +52,6 @@ for epoch in range(epochs):
     model.train()
 
     for i, (input, target) in enumerate(train_loader):
-        save_volumetric_images(epoch, i, target, 'target')
         input_var, target_val = Variable(input), Variable(target)
         # input_var = input_var.cuda()
         # target_val = target_val.cuda()
@@ -72,6 +71,7 @@ for epoch in range(epochs):
                   'Train Loss: {loss.val:.5f} ({loss.avg:.5f})\t'.format(
                 epoch, i, len(train_loader),
                 loss=train_loss))
+            save_volumetric_images(epoch, i, target, 'target')
             save_volumetric_images(epoch, i, output)
 
     print('Finish Epoch: [{0}]\t'
