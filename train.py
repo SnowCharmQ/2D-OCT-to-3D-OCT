@@ -15,6 +15,8 @@ file_path = "data_path.csv"
 if not os.path.exists(file_path):
     generate()
 
+device_ids = [0, 1, 2, 3, 4, 5, 6, 7]
+
 # input_height = 543
 # input_width = 543
 # output_height = 885
@@ -28,11 +30,11 @@ transform = transforms.Compose([
     transforms.Normalize((0.1307,), (0.3081,))
 ])
 model = ReconNet()
-# model = nn.DataParallel(model)
-# model = model.cuda()
+# model = nn.DataParallel(model, device_ids=device_ids)
+# model = model.cuda(device=device_ids[0])
 optimizer = torch.optim.Adam(model.parameters(), lr=0.01, betas=(0.5, 0.999))
 criterion = nn.MSELoss(reduction="mean")
-criterion = criterion.cuda()
+criterion = criterion.cuda(device=device_ids[0])
 
 train_loader = get_data_loader(file_path=file_path,
                                input_height=input_height,
@@ -53,8 +55,8 @@ for epoch in range(epochs):
 
     for i, (input, target) in enumerate(train_loader):
         input_var, target_val = Variable(input), Variable(target)
-        # input_var = input_var.cuda()
-        # target_val = target_val.cuda()
+        # input_var = input_var.cuda(device=device_ids[0])
+        # target_val = target_val.cuda(device=device_ids[0])
 
         output = model(input_var).float()
 
