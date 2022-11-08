@@ -1,6 +1,7 @@
 import os
 import numpy as np
 from PIL import Image
+from matplotlib import pyplot as plt
 
 
 def generate_data_path(path: str):
@@ -42,22 +43,60 @@ def clean_data_npy(path: str):
             os.remove(filename)
 
 
-def save_volumetric_images(epoch, i, output, default='output'):
-    def get_file_path(j, k):
-        current_path = os.getcwd()
-        dic_path = "img"
-        if not os.path.exists(dic_path):
-            os.mkdir(dic_path)
-        img_path = "%s_epoch%s_iter%s_batch%s_no%s.png" % (default, epoch, i, j, k)
-        file_path = os.path.join(current_path, dic_path, img_path)
-        return file_path
+def get_file_path(epoch, i, j, k, info="output", dic_path="img"):
+    current_path = os.getcwd()
+    if not os.path.exists(dic_path):
+        os.mkdir(dic_path)
+    img_path = "%s_epoch%s_iter%s_batch%s_no%s.png" % (info, epoch, i, j, k)
+    file_path = os.path.join(current_path, dic_path, img_path)
+    return file_path
 
+
+def save_volumetric_images(epoch, i, output, default='output'):
     output = output.detach().numpy()
     for j in range(len(output)):
         for k in range(len(output[j])):
             img = output[j][k]
-            Image.fromarray(img).convert("L").save(get_file_path(j, k))
+            Image.fromarray(img).convert("L").save(get_file_path(epoch, i, j, k, default))
     print("Saved %s images in epoch %d iter %d" % (default, epoch, i))
+
+
+def save_diff_images(epoch, i, output, target, plane=0):
+    output = output.detach().numpy()
+    target = target.detach().numpy()
+    for batch in range(len(output)):
+        output_batch = output[batch]
+        target_batch = target[batch]
+        seq = range(output_batch.shape[plane])
+        for idx in seq:
+            if plane == 0:
+                pd = output_batch[idx, :, :]
+                gt = target_batch[idx, :, :]
+            elif plane == 1:
+                pd = output_batch[:, idx, :]
+                gt = target_batch[:, idx, :]
+            elif plane == 2:
+                pd = output_batch[:, :, idx]
+                gt = output_batch[:, :, idx]
+            else:
+                assert False
+            f = plt.figure()
+            f.add_subplot(1, 3, 1)
+            plt.imshow(pd, interpolation='none', cmap='gray')
+            plt.title("Output")
+            plt.axis("off")
+            f.add_subplot(1, 3, 2)
+            plt.imshow(gt, interpolation='none', cmap='gray')
+            plt.title("Target")
+            plt.axis("off")
+            f.add_subplot(1, 3, 3)
+            plt.imshow(gt - pd, interpolation='none', cmap='gray')
+            plt.title("Difference")
+            plt.axis("off")
+            file_path = get_file_path(epoch, i, batch, idx, "diff", "diff")
+            f.savefig(file_path)
+            plt.close()
+    print("Saved difference images in epoch %d iter %d" % (epoch, i))
 
 
 class AverageMeter:

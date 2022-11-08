@@ -75,6 +75,7 @@ for epoch in range(epochs):
                 loss=train_loss))
             save_volumetric_images(epoch, i, target, 'target')
             save_volumetric_images(epoch, i, output)
+            save_diff_images(epoch, i, output, target)
 
     print('Finish Epoch: [{0}]\t'
           'Average Train Loss: {loss.avg:.5f}\t'.format(
