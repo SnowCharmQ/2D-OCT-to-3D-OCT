@@ -90,6 +90,8 @@ for epoch in range(epochs):
                  'loss': best_loss,
                  'optimizer': optimizer.state_dict()
                  }
+        if not os.path.exists("model"):
+            os.mkdir("model")
         filename = os.path.join(os.getcwd(), "model", "model.pth.tar")
         torch.save(state, filename)
         print("! Save the best model in epoch: {}, the current loss: {}".format(epoch, best_loss))
