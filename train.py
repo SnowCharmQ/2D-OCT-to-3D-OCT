@@ -1,6 +1,6 @@
 import gc
 import time
-
+# from torchstat import stat
 from torchvision import transforms
 from torch.autograd import Variable
 from data_processor.cleaner import clean
@@ -15,6 +15,7 @@ file_path = "data_path.csv"
 if not os.path.exists(file_path):
     generate()
 
+device = torch.device("cuda")
 device_ids = [0, 1, 2, 3, 4, 5, 6, 7]
 
 # input_height = 543
@@ -30,11 +31,12 @@ transform = transforms.Compose([
     transforms.Normalize((0.1307,), (0.3081,))
 ])
 model = ReconNet()
-# model = nn.DataParallel(model, device_ids=device_ids)
-# model = model.cuda(device=device_ids[0])
+# stat(model, (1, 128, 128))
+model = nn.DataParallel(model, device_ids=device_ids)
+model = model.to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=0.01, betas=(0.5, 0.999))
 criterion = nn.MSELoss(reduction="mean")
-criterion = criterion.cuda(device=device_ids[0])
+criterion = criterion.to(device)
 
 train_loader = get_data_loader(file_path=file_path,
                                input_height=input_height,
@@ -44,7 +46,7 @@ train_loader = get_data_loader(file_path=file_path,
                                transform=transform,
                                batch_size=4)
 
-epochs = 50
+epochs = 500
 print_freq = 5
 best_loss = 1e5
 print("Start training...")
@@ -54,13 +56,13 @@ for epoch in range(epochs):
     model.train()
 
     for i, (input, target) in enumerate(train_loader):
-        input_var, target_val = Variable(input), Variable(target)
-        # input_var = input_var.cuda(device=device_ids[0])
-        # target_val = target_val.cuda(device=device_ids[0])
+        input_var, target_var = Variable(input), Variable(target)
+        input_var = input_var.to(device)
+        target_var = target_var.to(device)
 
         output = model(input_var).float()
 
-        loss = criterion(output, target_val)
+        loss = criterion(output, target_var)
         train_loss.update(loss.data.item(), input.size(0))
 
         optimizer.zero_grad()
