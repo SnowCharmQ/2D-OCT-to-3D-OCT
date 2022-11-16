@@ -10,8 +10,8 @@ from data import *
 from net import *
 from utils import *
 
-clean()
 file_path = "data_path.csv"
+clean()
 if not os.path.exists(file_path):
     generate()
 
@@ -30,13 +30,13 @@ transform = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize((0.1307,), (0.3081,))
 ])
-model = ReconNet()
+model = Net()
 # stat(model, (1, 128, 128))
-model = nn.DataParallel(model, device_ids=device_ids)
-model = model.to(device)
+# model = nn.DataParallel(model, device_ids=device_ids)
+# model = model.to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=0.01, betas=(0.5, 0.999))
 criterion = nn.MSELoss(reduction="mean")
-criterion = criterion.to(device)
+# criterion = criterion.to(device)
 
 train_loader = get_data_loader(file_path=file_path,
                                input_height=input_height,
@@ -44,7 +44,7 @@ train_loader = get_data_loader(file_path=file_path,
                                output_height=output_height,
                                output_width=output_width,
                                transform=transform,
-                               batch_size=4)
+                               batch_size=1)
 
 epochs = 500
 print_freq = 5
@@ -57,8 +57,8 @@ for epoch in range(epochs):
 
     for i, (input, target) in enumerate(train_loader):
         input_var, target_var = Variable(input), Variable(target)
-        input_var = input_var.to(device)
-        target_var = target_var.to(device)
+        # input_var = input_var.to(device)
+        # target_var = target_var.to(device)
 
         output = model(input_var).float()
 
