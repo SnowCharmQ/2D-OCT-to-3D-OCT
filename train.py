@@ -32,11 +32,11 @@ transform = transforms.Compose([
 ])
 model = Net()
 # stat(model, (1, 128, 128))
-# model = nn.DataParallel(model, device_ids=device_ids)
-# model = model.to(device)
+model = nn.DataParallel(model, device_ids=device_ids)
+model = model.to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=0.01, betas=(0.5, 0.999))
 criterion = nn.MSELoss(reduction="mean")
-# criterion = criterion.to(device)
+criterion = criterion.to(device)
 
 train_loader = get_data_loader(file_path=file_path,
                                input_height=input_height,
@@ -57,8 +57,8 @@ for epoch in range(epochs):
 
     for i, (input, target) in enumerate(train_loader):
         input_var, target_var = Variable(input), Variable(target)
-        # input_var = input_var.to(device)
-        # target_var = target_var.to(device)
+        input_var = input_var.to(device)
+        target_var = target_var.to(device)
 
         output = model(input_var).float()
 

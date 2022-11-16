@@ -53,7 +53,7 @@ def get_file_path(epoch, i, j, k, info="output", dic_path="img"):
 
 
 def save_volumetric_images(epoch, i, output, default='output'):
-    output = output.detach().numpy()
+    output = output.cpu().detach().numpy()
     for j in range(len(output)):
         for k in range(len(output[j])):
             img = output[j][k]
@@ -62,8 +62,8 @@ def save_volumetric_images(epoch, i, output, default='output'):
 
 
 def save_diff_images(epoch, i, output, target, plane=0):
-    output = output.detach().numpy()
-    target = target.detach().numpy()
+    output = output.cpu().detach().numpy()
+    target = target.cpu().detach().numpy()
     for batch in range(len(output)):
         output_batch = output[batch]
         target_batch = target[batch]
