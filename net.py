@@ -38,7 +38,7 @@ class Net(nn.Module):
         self.conv_layer2 = nn.Sequential(*conv_layer2)
         self.relu2 = nn.ReLU(inplace=True)
 
-        conv3 = nn.Conv2d(256, 512, kernel_size=4, stride=2, padding=1, bias=False)
+        conv3 = nn.Conv2d(256, 512, kernel_size=4, stride=4, padding=0, bias=False)
         bn2_3 = nn.BatchNorm2d(512)
         relu3 = nn.ReLU(inplace=True)
         conv_layer3 = [conv3, bn2_3, relu3]
@@ -50,7 +50,7 @@ class Net(nn.Module):
         self.conv_layer4 = nn.Sequential(*conv_layer4)
         self.relu4 = nn.ReLU(inplace=True)
 
-        conv5 = nn.Conv2d(512, 1024, kernel_size=4, stride=2, padding=1, bias=False)
+        conv5 = nn.Conv2d(512, 1024, kernel_size=4, stride=4, padding=0, bias=False)
         bn2_5 = nn.BatchNorm2d(1024)
         relu5 = nn.ReLU(inplace=True)
         conv_layer5 = [conv5, bn2_5, relu5]
@@ -62,62 +62,62 @@ class Net(nn.Module):
         self.conv_layer6 = nn.Sequential(*conv_layer6)
         self.relu6 = nn.ReLU(inplace=True)
 
-        conv7 = nn.Conv2d(1024, 2048, kernel_size=4, stride=2, padding=1, bias=False)
-        bn2_7 = nn.BatchNorm2d(2048)
-        relu7 = nn.ReLU(inplace=True)
-        conv_layer7 = [conv7, bn2_7, relu7]
-        self.conv_layer7 = nn.Sequential(*conv_layer7)
-
-        conv8 = nn.Conv2d(2048, 2048, kernel_size=3, stride=1, padding=1, bias=False)
-        bn2_8 = nn.BatchNorm2d(2048)
-        conv_layer8 = [conv8, bn2_8]
-        self.conv_layer8 = nn.Sequential(*conv_layer8)
-        self.relu8 = nn.ReLU(inplace=True)
-
-        conv9 = nn.Conv2d(2048, 4096, kernel_size=4, stride=2, padding=1, bias=False)
-        bn2_9 = nn.BatchNorm2d(4096)
-        relu9 = nn.ReLU(inplace=True)
-        conv_layer9 = [conv9, bn2_9, relu9]
-        self.conv_layer9 = nn.Sequential(*conv_layer9)
-
-        conv10 = nn.Conv2d(4096, 4096, kernel_size=3, stride=1, padding=1, bias=False)
-        bn2_10 = nn.BatchNorm2d(4096)
-        conv_layer10 = [conv10, bn2_10]
-        self.conv_layer10 = nn.Sequential(*conv_layer10)
-        self.relu10 = nn.ReLU(inplace=True)
-
-        # Transform Module
-
-        conv11 = nn.Conv2d(4096, 4096, kernel_size=1, stride=1, padding=0, bias=False)
+        # conv7 = nn.Conv2d(1024, 2048, kernel_size=4, stride=2, padding=1, bias=False)
+        # bn2_7 = nn.BatchNorm2d(2048)
+        # relu7 = nn.ReLU(inplace=True)
+        # conv_layer7 = [conv7, bn2_7, relu7]
+        # self.conv_layer7 = nn.Sequential(*conv_layer7)
+        #
+        # conv8 = nn.Conv2d(2048, 2048, kernel_size=3, stride=1, padding=1, bias=False)
+        # bn2_8 = nn.BatchNorm2d(2048)
+        # conv_layer8 = [conv8, bn2_8]
+        # self.conv_layer8 = nn.Sequential(*conv_layer8)
+        # self.relu8 = nn.ReLU(inplace=True)
+        #
+        # conv9 = nn.Conv2d(2048, 4096, kernel_size=4, stride=2, padding=1, bias=False)
+        # bn2_9 = nn.BatchNorm2d(4096)
+        # relu9 = nn.ReLU(inplace=True)
+        # conv_layer9 = [conv9, bn2_9, relu9]
+        # self.conv_layer9 = nn.Sequential(*conv_layer9)
+        #
+        # conv10 = nn.Conv2d(4096, 4096, kernel_size=3, stride=1, padding=1, bias=False)
+        # bn2_10 = nn.BatchNorm2d(4096)
+        # conv_layer10 = [conv10, bn2_10]
+        # self.conv_layer10 = nn.Sequential(*conv_layer10)
+        # self.relu10 = nn.ReLU(inplace=True)
+        #
+        # # Transform Module
+        #
+        conv11 = nn.Conv2d(1024, 1024, kernel_size=1, stride=1, padding=0, bias=False)
         relu11 = nn.ReLU(inplace=True)
         trans1 = [conv11, relu11]
         self.trans1 = nn.Sequential(*trans1)
-        deconv11 = nn.ConvTranspose3d(2048, 2048, kernel_size=1, stride=1, padding=0, output_padding=0, bias=False)
+        deconv11 = nn.ConvTranspose3d(512, 512, kernel_size=1, stride=1, padding=0, output_padding=0, bias=False)
         relu12 = nn.ReLU(inplace=True)
         trans2 = [deconv11, relu12]
         self.trans2 = nn.Sequential(*trans2)
-
-        # Generation Network
-
-        deconv10 = nn.ConvTranspose3d(2048, 1024, kernel_size=4, stride=2, padding=1, output_padding=0, bias=False)
-        bn3_10 = nn.BatchNorm3d(1024)
-        relu13 = nn.ReLU(inplace=True)
-        deconv_layer10 = [deconv10, bn3_10, relu13]
-        self.deconv_layer10 = nn.Sequential(*deconv_layer10)
-
-        deconv9 = nn.ConvTranspose3d(1024, 512, kernel_size=4, stride=2, padding=1, output_padding=0, bias=False)
-        bn3_9 = nn.BatchNorm3d(512)
-        relu14 = nn.ReLU(inplace=True)
-        deconv_layer9 = [deconv9, bn3_9, relu14]
-        self.deconv_layer9 = nn.Sequential(*deconv_layer9)
-
-        deconv8 = nn.ConvTranspose3d(512, 512, kernel_size=3, stride=1, padding=1, output_padding=0, bias=False)
-        bn3_8 = nn.BatchNorm3d(512)
-        relu15 = nn.ReLU(inplace=True)
-        deconv_layer8 = [deconv8, bn3_8, relu15]
-        self.deconv_layer8 = nn.Sequential(*deconv_layer8)
-
-        deconv7 = nn.ConvTranspose3d(512, 256, kernel_size=4, stride=2, padding=1, output_padding=0, bias=False)
+        #
+        # # Generation Network
+        #
+        # deconv10 = nn.ConvTranspose3d(2048, 1024, kernel_size=4, stride=2, padding=1, output_padding=0, bias=False)
+        # bn3_10 = nn.BatchNorm3d(1024)
+        # relu13 = nn.ReLU(inplace=True)
+        # deconv_layer10 = [deconv10, bn3_10, relu13]
+        # self.deconv_layer10 = nn.Sequential(*deconv_layer10)
+        #
+        # deconv9 = nn.ConvTranspose3d(1024, 512, kernel_size=4, stride=2, padding=1, output_padding=0, bias=False)
+        # bn3_9 = nn.BatchNorm3d(512)
+        # relu14 = nn.ReLU(inplace=True)
+        # deconv_layer9 = [deconv9, bn3_9, relu14]
+        # self.deconv_layer9 = nn.Sequential(*deconv_layer9)
+        #
+        # deconv8 = nn.ConvTranspose3d(512, 512, kernel_size=3, stride=1, padding=1, output_padding=0, bias=False)
+        # bn3_8 = nn.BatchNorm3d(512)
+        # relu15 = nn.ReLU(inplace=True)
+        # deconv_layer8 = [deconv8, bn3_8, relu15]
+        # self.deconv_layer8 = nn.Sequential(*deconv_layer8)
+        #
+        deconv7 = nn.ConvTranspose3d(512, 256, kernel_size=4, stride=4, padding=0, output_padding=0, bias=False)
         bn3_7 = nn.BatchNorm3d(256)
         relu16 = nn.ReLU(inplace=True)
         deconv_layer7 = [deconv7, bn3_7, relu16]
@@ -129,7 +129,7 @@ class Net(nn.Module):
         deconv_layer6 = [deconv6, bn3_6, relu17]
         self.deconv_layer6 = nn.Sequential(*deconv_layer6)
 
-        deconv5 = nn.ConvTranspose3d(256, 128, kernel_size=4, stride=2, padding=1, output_padding=0, bias=False)
+        deconv5 = nn.ConvTranspose3d(256, 128, kernel_size=4, stride=4, padding=0, output_padding=0, bias=False)
         bn3_5 = nn.BatchNorm3d(128)
         relu17 = nn.ReLU(inplace=True)
         deconv_layer5 = [deconv5, bn3_5, relu17]
@@ -169,7 +169,6 @@ class Net(nn.Module):
         conv2 = self.conv_layer2(conv1)
         print("conv2=", conv2.shape)
         relu2 = self.relu2(conv1 + conv2)
-        print("relu2=", relu2.shape)
 
         conv3 = self.conv_layer3(relu2)
         print("conv3=", conv3.shape)
@@ -183,32 +182,32 @@ class Net(nn.Module):
         print("conv6=", conv6.shape)
         relu6 = self.relu6(conv5 + conv6)
 
-        conv7 = self.conv_layer7(relu6)
-        print("conv7=", conv7.shape)
-        conv8 = self.conv_layer8(conv7)
-        print("conv8=", conv8.shape)
-        relu8 = self.relu8(conv7 + conv8)
+        # conv7 = self.conv_layer7(relu6)
+        # print("conv7=", conv7.shape)
+        # conv8 = self.conv_layer8(conv7)
+        # print("conv8=", conv8.shape)
+        # relu8 = self.relu8(conv7 + conv8)
+        #
+        # conv9 = self.conv_layer9(relu8)
+        # print("conv9=", conv9.shape)
+        # conv10 = self.conv_layer10(conv9)
+        # print("conv10=", conv10.shape)
+        # relu10 = self.relu10(conv9 + conv10)
 
-        conv9 = self.conv_layer9(relu8)
-        print("conv9=", conv9.shape)
-        conv10 = self.conv_layer10(conv9)
-        print("conv10=", conv10.shape)
-        relu10 = self.relu10(conv9 + conv10)
-
-        features = self.trans1(relu10)
+        features = self.trans1(relu6)
         print("features=", features.shape)
-        trans_features = features.view(-1, 2048, 2, 4, 4)
+        trans_features = features.view(-1, 512, 2, 4, 4)
         print("trans_features=", trans_features.shape)
         trans_features = self.trans2(trans_features)
         print("trans_features=", trans_features.shape)
 
-        deconv10 = self.deconv_layer10(trans_features)
-        print("deconv10=", deconv10.shape)
-        deconv9 = self.deconv_layer9(deconv10)
-        print("deconv9=", deconv9.shape)
-        deconv8 = self.deconv_layer8(deconv9)
-        print("deconv8=", deconv8.shape)
-        deconv7 = self.deconv_layer7(deconv8)
+        # deconv10 = self.deconv_layer10(trans_features)
+        # print("deconv10=", deconv10.shape)
+        # deconv9 = self.deconv_layer9(deconv10)
+        # print("deconv9=", deconv9.shape)
+        # deconv8 = self.deconv_layer8(deconv9)
+        # print("deconv8=", deconv8.shape)
+        deconv7 = self.deconv_layer7(trans_features)
         print("deconv7=", deconv7.shape)
         deconv6 = self.deconv_layer6(deconv7)
         print("deconv6=", deconv6.shape)
@@ -228,4 +227,3 @@ class Net(nn.Module):
         out = self.output_layer(out)
         print("out=", out.shape)
         return out
-

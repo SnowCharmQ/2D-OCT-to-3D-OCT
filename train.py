@@ -44,7 +44,7 @@ train_loader = get_data_loader(file_path=file_path,
                                output_height=output_height,
                                output_width=output_width,
                                transform=transform,
-                               batch_size=1)
+                               batch_size=4)
 
 epochs = 500
 print_freq = 5
