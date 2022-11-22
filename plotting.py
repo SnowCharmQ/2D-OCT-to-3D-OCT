@@ -1,9 +1,9 @@
 import matplotlib.pyplot as plt
 
-file_name = input("File Name:")
-loss_fn = input("Loss Function:")
+file_name = input("File Name: ")
+loss_fn = input("Loss Function: ")
 
-with open('file_name', 'r') as f:
+with open('out/' + file_name, 'r') as f:
     lines = f.readlines()
 x_axis = []
 y_axis = []

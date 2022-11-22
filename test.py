@@ -112,7 +112,7 @@ def get_error_metrics(im_pred, im_gt):
 
 
 def images_save(im_pred, im_gt):
-    seq = range(pred.shape[0])
+    seq = range(im_pred.shape[0])
     for idx in seq:
         pd = im_pred[idx, :, :]
         gt = im_gt[idx, :, :]
