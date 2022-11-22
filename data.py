@@ -45,3 +45,42 @@ def get_data_loader(file_path, input_height, input_width, output_height, output_
     dataset = Oct3dDataset(file_path, input_height, input_width, output_height, output_width, transform)
     loader = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=True, pin_memory=False)
     return loader
+
+
+class TestDataset(Dataset):
+    def __init__(self, file_path, nums, input_height, input_width,
+                 output_height, output_width, transform=None):
+        self.df = pd.read_csv(file_path)
+        self.nums = nums
+        self.input_height = input_height
+        self.input_width = input_width
+        self.output_height = output_height
+        self.output_width = output_width
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.nums)
+
+    def __getitem__(self, idx):
+        projs = np.zeros((self.input_width, self.input_height, 1), dtype=np.float32)
+
+        proj_path = self.df.iloc[self.nums[idx]]['2D_data_path']
+        proj = Image.open(proj_path).resize((self.input_height, self.input_width))
+        projs[:, :, 0] = np.array(proj, dtype=np.float32)[:, :, 0]
+
+        if self.transform:
+            projs = self.transform(projs)
+
+        vol_path = self.df.iloc[self.nums[idx]]['3D_data_path']
+        volume = np.load(vol_path)
+
+        volume = torch.from_numpy(volume).float()
+
+        return projs, volume
+
+
+def get_test_loader(file_path, nums, input_height, input_width, output_height, output_width,
+                    transform, batch_size=1):
+    dataset = TestDataset(file_path, nums, input_height, input_width, output_height, output_width, transform)
+    loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+    return loader

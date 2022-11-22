@@ -2,6 +2,13 @@ import os
 import numpy as np
 from PIL import Image
 from matplotlib import pyplot as plt
+from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_absolute_error
+
+
+# from skimage.metrics import normalized_root_mse as compare_nrmse
+# from skimage.metrics import structural_similarity as compare_ssim
+# from skimage.metrics import peak_signal_noise_ratio as compare_psnr
 
 
 def generate_data_path(path: str):
@@ -101,6 +108,54 @@ def save_diff_images(epoch, i, output, target, plane=0):
             f.savefig(file_path)
             plt.close()
     print("Saved difference images in epoch %d iter %d" % (epoch, i))
+
+
+def get_error_metrics(im_pred, im_gt):
+    im_pred = np.array(im_pred).astype(np.float64)
+    im_gt = np.array(im_gt).astype(np.float64)
+    assert (im_pred.flatten().shape == im_gt.flatten().shape)
+    # rmse_pred = compare_nrmse(image_true=im_gt, image_test=im_pred)
+    # psnr_pred = compare_psnr(image_true=im_gt, image_test=im_pred)
+    # ssim_pred = compare_ssim(im_gt, im_pred)
+    mse_pred = mean_squared_error(y_true=im_gt.flatten(), y_pred=im_pred.flatten())
+    mae_pred = mean_absolute_error(y_true=im_gt.flatten(), y_pred=im_pred.flatten())
+    print('mae: {mae_pred:.4f} | mse: {mse_pred:.4f}'.format(mae_pred=mae_pred, mse_pred=mse_pred))
+    # print(
+    #     'mae: {mae_pred:.4f} | mse: {mse_pred:.4f} | rmse: {rmse_pred:.4f} | ssim: {ssim_pred:.4f} | psnr: '
+    #     '{psnr_pred:.4f} '.format(mae_pred=mae_pred,
+    #                               mse_pred=mse_pred,
+    #                               rmse_pred=rmse_pred,
+    #                               ssim_pred=ssim_pred,
+    #                               psnr_pred=psnr_pred))
+
+
+def save_test_comparison_images(im_pred, im_gt, epoch, save_path):
+    im_pred = np.array(im_pred)[0]
+    im_gt = np.array(im_gt)[0]
+    seq = range(im_pred.shape[0])
+    for idx in seq:
+        pd = im_pred[idx, :, :]
+        gt = im_gt[idx, :, :]
+        f = plt.figure()
+        f.add_subplot(1, 4, 1)
+        plt.imshow(pd, interpolation='none', cmap='gray')
+        plt.title("Output")
+        plt.axis("off")
+        f.add_subplot(1, 4, 2)
+        plt.imshow(gt, interpolation='none', cmap='gray')
+        plt.title("Target")
+        plt.axis("off")
+        f.add_subplot(1, 4, 3)
+        plt.imshow(gt - pd, interpolation='none', cmap='gray')
+        plt.title("Target - Output")
+        plt.axis("off")
+        f.add_subplot(1, 4, 4)
+        plt.imshow(pd - gt, interpolation='none', cmap='gray')
+        plt.title("Output - Target")
+        plt.axis("off")
+        file_path = os.path.join(save_path, 'ImageSlice_{}_{}.png'.format(idx + 1, epoch))
+        f.savefig(file_path)
+        plt.close()
 
 
 class AverageMeter:
