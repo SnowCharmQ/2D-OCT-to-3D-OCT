@@ -2,6 +2,7 @@ import gc
 import os
 import random
 import time
+import uuid
 
 import numpy as np
 # from torchstat import stat
@@ -14,6 +15,8 @@ from data import *
 from net import *
 from utils import *
 
+log_name = str(uuid.uuid1()) + ".txt"
+file = open(log_name, 'w')
 file_path = "data_path.csv"
 exp_path = 'exp'
 if not os.path.exists(exp_path):
@@ -22,8 +25,8 @@ clean()
 if not os.path.exists(file_path):
     generate()
 
-device = torch.device("cuda:6")
-device_ids = [6]
+device = torch.device("cuda")
+device_ids = [0, 1, 2, 3, 4, 5, 6, 7]
 
 # input_height = 543
 # input_width = 543
@@ -46,25 +49,24 @@ optimizer = torch.optim.Adam(model.parameters(), lr=0.01, betas=(0.5, 0.999))
 criterion = nn.SmoothL1Loss()
 criterion = criterion.to(device)
 
-nums = [0, 12, 25, 48, 66]
-
-train_loader = get_data_loader(file_path=file_path,
-                               input_height=input_height,
-                               input_width=input_width,
-                               output_height=output_height,
-                               output_width=output_width,
-                               transform=transform,
-                               batch_size=4)
+train_loader = get_train_loader(file_path=file_path,
+                                input_height=input_height,
+                                input_width=input_width,
+                                output_height=output_height,
+                                output_width=output_width,
+                                transform=transform,
+                                batch_size=4,
+                                proportion=0.8)
 test_loader = get_test_loader(file_path=file_path,
-                              nums=nums,
                               input_height=input_height,
                               input_width=input_width,
                               output_height=output_height,
                               output_width=output_width,
                               transform=transform,
-                              batch_size=1)
+                              batch_size=1,
+                              proportion=0.8)
 
-epochs = 500
+epochs = 300
 print_freq = 10
 best_loss = 1e5
 print("Start training...")
@@ -87,11 +89,11 @@ for epoch in range(epochs):
         loss.backward()
         optimizer.step()
 
-        if i % print_freq == 0:
+        if i % print_freq == 0 or i == len(train_loader) - 1:
             print('Epoch: [{0}] \t'
                   'Iter: [{1}/{2}]\t'
                   'Train Loss: {loss.val:.5f} ({loss.avg:.5f})\t'.format(
-                epoch, i, len(train_loader),
+                epoch, i, len(train_loader) - 1,
                 loss=train_loss))
             save_volumetric_images(epoch, i, target, 'target')
             save_volumetric_images(epoch, i, output)
@@ -118,21 +120,41 @@ for epoch in range(epochs):
 
     model.eval()
     print("Start testing in epoch {}".format(epoch))
-    test_loss = AverageMeter()
+    s = time.time()
 
+    total_mse = 0
+    total_mae = 0
+    test_size = len(test_loader)
+    file.write("Epoch {} :\n".format(epoch))
     for i, (input, target) in enumerate(test_loader):
         input_var, target_var = Variable(input), Variable(target)
         target_var = target_var.to(device)
         output = model(input_var)
-        loss = criterion(output, target_var)
-        test_loss.update(loss.data.item(), input.size(0))
         pd = output.data.float()
         gt = target.data.float()
         save_path = os.path.join(exp_path, 'result' + str(i))
         if not os.path.exists(save_path):
             os.mkdir(save_path)
-        get_error_metrics(pd.cpu(), gt.cpu())
-        save_test_comparison_images(pd.cpu(), gt.cpu(), epoch, save_path)
+
+        mse, mae = get_error_metrics(pd.cpu(), gt.cpu())
+        file.write('mse: {mse:.4f} | mae: {mae:.4f}'.format(mse=mse, mae=mae))
+        total_mse += mse
+        total_mae += mae
+        save_test_comparison_images(pd.cpu(), gt.cpu(), epoch, i, save_path)
+
+    print("Total MSE Loss in test {} epoch {}".format(total_mse, epoch))
+    print("Average MSE Loss in test {} epoch {}".format(total_mse / test_size, epoch))
+    print("Total MAE Loss in test {} epoch {}".format(total_mae, epoch))
+    print("Average MAE Loss in test {} epoch {}".format(total_mae / test_size, epoch))
+    file.write("Total MSE Loss in test {} epoch {}\n".format(total_mse, epoch))
+    file.write("Average MSE Loss in test {} epoch {}\n".format(total_mse / test_size, epoch))
+    file.write("Total MAE Loss in test {} epoch {}\n".format(total_mae, epoch))
+    file.write("Average MAE Loss in test {} epoch {}\n".format(total_mae / test_size, epoch))
+
+    e = time.time()
+    print("Time used in test: ", (e - s))
 
     gc.collect()
-    torch.cuda.empty_cache()
+    # torch.cuda.empty_cache()
+
+file.close()

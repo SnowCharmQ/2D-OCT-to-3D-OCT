@@ -12,6 +12,7 @@ from sklearn.metrics import mean_absolute_error
 
 
 def generate_data_path(path: str):
+    names = path.split("\\")
     tif_path, volume_path = None, None
     for filename in os.listdir(path):
         suffix = os.path.splitext(filename)[-1]
@@ -40,7 +41,7 @@ def generate_data_path(path: str):
             np.save(volume_path, volume)
     assert tif_path is not None
     assert volume_path is not None
-    return tif_path, volume_path
+    return tif_path, volume_path, names[-1]
 
 
 def clean_data_npy(path: str):
@@ -50,11 +51,11 @@ def clean_data_npy(path: str):
             os.remove(filename)
 
 
-def get_file_path(epoch, i, j, k, info="output", dic_path="img"):
+def get_file_path(epoch, iter, batch, no, info="output", dic_path="img"):
     current_path = os.getcwd()
     if not os.path.exists(dic_path):
         os.mkdir(dic_path)
-    img_path = "%s_epoch%s_iter%s_batch%s_no%s.png" % (info, epoch, i, j, k)
+    img_path = "%s_epoch%s_iter%s_batch%s_no%s.png" % (info, epoch, iter, batch, no)
     file_path = os.path.join(current_path, dic_path, img_path)
     return file_path
 
@@ -127,9 +128,10 @@ def get_error_metrics(im_pred, im_gt):
     #                               rmse_pred=rmse_pred,
     #                               ssim_pred=ssim_pred,
     #                               psnr_pred=psnr_pred))
+    return mse_pred, mae_pred
 
 
-def save_test_comparison_images(im_pred, im_gt, epoch, save_path):
+def save_test_comparison_images(im_pred, im_gt, epoch, num, save_path):
     im_pred = np.array(im_pred)[0]
     im_gt = np.array(im_gt)[0]
     seq = range(im_pred.shape[0])
@@ -153,7 +155,7 @@ def save_test_comparison_images(im_pred, im_gt, epoch, save_path):
         plt.imshow(pd - gt, interpolation='none', cmap='gray')
         plt.title("Output - Target")
         plt.axis("off")
-        file_path = os.path.join(save_path, 'ImageSlice_{}_{}.png'.format(idx + 1, epoch))
+        file_path = os.path.join(save_path, 'ImageSlice_{}_{}_{}.png'.format(num, idx + 1, epoch))
         f.savefig(file_path)
         plt.close()
 
