@@ -4,11 +4,7 @@ from PIL import Image
 from matplotlib import pyplot as plt
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import mean_absolute_error
-
-
-# from skimage.metrics import normalized_root_mse as compare_nrmse
-# from skimage.metrics import structural_similarity as compare_ssim
-# from skimage.metrics import peak_signal_noise_ratio as compare_psnr
+from skimage.measure import compare_nrmse, compare_psnr, compare_ssim
 
 
 def generate_data_path(path: str):
@@ -30,7 +26,7 @@ def generate_data_path(path: str):
             numbers.append(59)
             numbers.sort()
             for i in range(len(numbers)):
-                oct_path = f"octscan_{numbers[i] + 1}.png"
+                oct_path = "octscan_%i.png".format(numbers[i] + 1)
                 oct_path = os.path.join(images_path, oct_path)
                 img = Image.open(oct_path)
                 img = img.crop((0, 30, 512, 542))
@@ -115,20 +111,19 @@ def get_error_metrics(im_pred, im_gt):
     im_pred = np.array(im_pred).astype(np.float64)
     im_gt = np.array(im_gt).astype(np.float64)
     assert (im_pred.flatten().shape == im_gt.flatten().shape)
-    # rmse_pred = compare_nrmse(image_true=im_gt, image_test=im_pred)
-    # psnr_pred = compare_psnr(image_true=im_gt, image_test=im_pred)
-    # ssim_pred = compare_ssim(im_gt, im_pred)
     mse_pred = mean_squared_error(y_true=im_gt.flatten(), y_pred=im_pred.flatten())
     mae_pred = mean_absolute_error(y_true=im_gt.flatten(), y_pred=im_pred.flatten())
-    print('mae: {mae_pred:.4f} | mse: {mse_pred:.4f}'.format(mae_pred=mae_pred, mse_pred=mse_pred))
-    # print(
-    #     'mae: {mae_pred:.4f} | mse: {mse_pred:.4f} | rmse: {rmse_pred:.4f} | ssim: {ssim_pred:.4f} | psnr: '
-    #     '{psnr_pred:.4f} '.format(mae_pred=mae_pred,
-    #                               mse_pred=mse_pred,
-    #                               rmse_pred=rmse_pred,
-    #                               ssim_pred=ssim_pred,
-    #                               psnr_pred=psnr_pred))
-    return mse_pred, mae_pred
+    rmse_pred = compare_nrmse(image_true=im_gt, image_test=im_pred)
+    psnr_pred = compare_psnr(image_true=im_gt, image_test=im_pred)
+    ssim_pred = compare_ssim(im_gt=im_gt, im_pred=im_pred)
+    print(
+        'mae: {mae_pred:.4f} | mse: {mse_pred:.4f} | rmse: {rmse_pred:.4f} | ssim: {ssim_pred:.4f} | psnr: '
+        '{psnr_pred:.4f} '.format(mae_pred=mae_pred,
+                                  mse_pred=mse_pred,
+                                  rmse_pred=rmse_pred,
+                                  ssim_pred=ssim_pred,
+                                  psnr_pred=psnr_pred))
+    return mse_pred, mae_pred, rmse_pred, ssim_pred, psnr_pred
 
 
 def save_test_comparison_images(im_pred, im_gt, epoch, num, save_path):
