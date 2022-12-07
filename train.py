@@ -1,9 +1,6 @@
 import gc
-import os
-import random
 import time
 
-import numpy as np
 # from torchstat import stat
 from torchvision import transforms
 from torch.autograd import Variable
@@ -14,12 +11,7 @@ from data import *
 from net import *
 from utils import *
 
-log_name = str(time.time()) + ".log"
-file = open(log_name, 'w')
 file_path = "data_path.csv"
-exp_path = 'exp'
-if not os.path.exists(exp_path):
-    os.mkdir(exp_path)
 clean()
 if not os.path.exists(file_path):
     generate()
@@ -101,15 +93,16 @@ for epoch in range(epochs):
                   'Train Loss: {loss.val:.5f} ({loss.avg:.5f})\t'.format(
                 epoch, i, len(train_loader) - 1,
                 loss=train_loss))
-            # save_volumetric_images(epoch, i, target, 'target')
-            # save_volumetric_images(epoch, i, output)
-            # save_diff_images(epoch, i, output, target)
+            pd = output.data.float().cpu()
+            gt = target.data.float().cpu()
+            save_comparison_images(pd, gt, mode="train", epoch=epoch, iter=i)
 
     print('Finish Epoch: [{0}]\t'
           'Average Train Loss: {loss.avg:.5f}\t'.format(
         epoch, loss=train_loss))
     e = time.time()
     print("Time used in training one epoch: ", (e - s))
+
     if train_loss.avg < best_loss:
         best_loss = train_loss.avg
         state = {'epoch': epoch + 1,
@@ -127,26 +120,24 @@ for epoch in range(epochs):
     model.eval()
     print("Start validating in epoch {}".format(epoch))
     s = time.time()
-    test_size = len(val_loader)
     for i, (input, target) in enumerate(val_loader):
         input_var, target_var = Variable(input), Variable(target)
-        # target_var = target_var.to(device)
+        input_var = input_var.to(device)
         output = model(input_var)
-        pd = output.data.float()
-        gt = target.data.float()
-        save_path = os.path.join(exp_path, 'result' + str(i))
-        if not os.path.exists(save_path):
-            os.mkdir(save_path)
+        pd = output.data.float().cpu()
+        gt = target.data.float().cpu()
+        save_comparison_images(pd, gt, mode="validation", epoch=epoch, iter=i)
+        get_error_metrics(pd, gt)
     e = time.time()
     print("Time used in validating one epoch: ", (e - s))
-
     gc.collect()
 
 model.eval()
 print("Start testing...")
 for i, (input, target) in enumerate(test_loader):
     input_var, target_var = Variable(input), Variable(target)
+    input_var = input_var.to(device)
     output = model(input_var)
-    pd = output.data.float()
-    gt = target.data.float()
-file.close()
+    pd = output.data.float().cpu()
+    gt = target.data.float().cpu()
+    save_comparison_images(pd, gt, mode="test", iter=i)

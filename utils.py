@@ -4,7 +4,9 @@ from PIL import Image
 from matplotlib import pyplot as plt
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import mean_absolute_error
-from skimage.measure import compare_nrmse, compare_psnr, compare_ssim
+from skimage.metrics import normalized_root_mse as compare_nrmse
+from skimage.metrics import structural_similarity as compare_ssim
+from skimage.metrics import peak_signal_noise_ratio as compare_psnr
 
 
 def generate_data_path(path: str):
@@ -26,7 +28,7 @@ def generate_data_path(path: str):
             numbers.append(59)
             numbers.sort()
             for i in range(len(numbers)):
-                oct_path = "octscan_%i.png".format(numbers[i] + 1)
+                oct_path = "octscan_%i.png" % (numbers[i] + 1)
                 oct_path = os.path.join(images_path, oct_path)
                 img = Image.open(oct_path)
                 img = img.crop((0, 30, 512, 542))
@@ -47,43 +49,57 @@ def clean_data_npy(path: str):
             os.remove(filename)
 
 
-def get_file_path(epoch, iter, batch, no, info="output", dic_path="img"):
-    current_path = os.getcwd()
-    if not os.path.exists(dic_path):
-        os.mkdir(dic_path)
-    img_path = "%s_epoch%s_iter%s_batch%s_no%s.png" % (info, epoch, iter, batch, no)
-    file_path = os.path.join(current_path, dic_path, img_path)
+def get_error_metrics(im_pd, im_gt):
+    im_pd = np.array(im_pd).astype(np.float64)
+    im_gt = np.array(im_gt).astype(np.float64)
+    im_pd = im_pd[0]
+    im_gt = im_gt[0]
+    size = im_pd.shape[0]
+    mse, mae, rmse, psnr, ssim = 0, 0, 0, 0, 0
+    for i in range(size):
+        pd = im_pd[i]
+        gt = im_gt[i]
+        assert (pd.flatten().shape == gt.flatten().shape)
+        mse_pred = mean_squared_error(y_true=gt.flatten(), y_pred=pd.flatten())
+        mae_pred = mean_absolute_error(y_true=gt.flatten(), y_pred=pd.flatten())
+        rmse_pred = compare_nrmse(image_true=gt, image_test=pd)
+        psnr_pred = compare_psnr(image_true=gt, image_test=pd)
+        ssim_pred = compare_ssim(gt, pd)
+        mse += mse_pred
+        mae += mae_pred
+        rmse += rmse_pred
+        psnr += psnr_pred
+        ssim += ssim_pred
+    print(
+        'mse: {mse_pred:.4f} | mae: {mae_pred:.4f} | rmse: {rmse_pred:.4f} |'
+        ' psnr: {psnr_pred:.4f} | ssim: {ssim_pred:.4f}'.format(mse_pred=mse,
+                                                                mae_pred=mae,
+                                                                rmse_pred=rmse,
+                                                                psnr_pred=psnr,
+                                                                ssim_pred=ssim))
+    # return mse_pred, mae_pred, rmse_pred, psnr_pred, ssim_pred
+
+
+def generate_file_path(**kwargs):
+    file_path = os.getcwd()
+    for (key, value) in kwargs.items():
+        tmp_path = "{}{}".format(str(key), str(value))
+        file_path = os.path.join(file_path, tmp_path)
+        if not str(value).endswith(".png") and not os.path.exists(file_path):
+            os.mkdir(file_path)
     return file_path
 
 
-def save_volumetric_images(epoch, i, output, default='output'):
-    output = output.cpu().detach().numpy()
-    for j in range(len(output)):
-        for k in range(len(output[j])):
-            img = output[j][k]
-            Image.fromarray(img).convert("L").save(get_file_path(epoch, i, j, k, default))
-    print("Saved %s images in epoch %d iter %d" % (default, epoch, i))
-
-
-def save_diff_images(epoch, i, output, target, plane=0):
+def save_comparison_images(output, target, mode, **kwargs):
     output = output.cpu().detach().numpy()
     target = target.cpu().detach().numpy()
     for batch in range(len(output)):
         output_batch = output[batch]
         target_batch = target[batch]
-        seq = range(output_batch.shape[plane])
+        seq = range(output_batch.shape[0])
         for idx in seq:
-            if plane == 0:
-                pd = output_batch[idx, :, :]
-                gt = target_batch[idx, :, :]
-            elif plane == 1:
-                pd = output_batch[:, idx, :]
-                gt = target_batch[:, idx, :]
-            elif plane == 2:
-                pd = output_batch[:, :, idx]
-                gt = output_batch[:, :, idx]
-            else:
-                assert False
+            pd = output_batch[idx, :, :]
+            gt = target_batch[idx, :, :]
             f = plt.figure()
             f.add_subplot(1, 4, 1)
             plt.imshow(pd, interpolation='none', cmap='gray')
@@ -101,58 +117,10 @@ def save_diff_images(epoch, i, output, target, plane=0):
             plt.imshow(pd - gt, interpolation='none', cmap='gray')
             plt.title("Output - Target")
             plt.axis("off")
-            file_path = get_file_path(epoch, i, batch, idx, "diff", "diff")
+            file_path = generate_file_path(result='', mode=mode, **kwargs, img="no{}.png".format(idx))
             f.savefig(file_path)
             plt.close()
-    print("Saved difference images in epoch %d iter %d" % (epoch, i))
-
-
-def get_error_metrics(im_pred, im_gt):
-    im_pred = np.array(im_pred).astype(np.float64)
-    im_gt = np.array(im_gt).astype(np.float64)
-    assert (im_pred.flatten().shape == im_gt.flatten().shape)
-    mse_pred = mean_squared_error(y_true=im_gt.flatten(), y_pred=im_pred.flatten())
-    mae_pred = mean_absolute_error(y_true=im_gt.flatten(), y_pred=im_pred.flatten())
-    rmse_pred = compare_nrmse(image_true=im_gt, image_test=im_pred)
-    psnr_pred = compare_psnr(image_true=im_gt, image_test=im_pred)
-    ssim_pred = compare_ssim(im_gt=im_gt, im_pred=im_pred)
-    print(
-        'mae: {mae_pred:.4f} | mse: {mse_pred:.4f} | rmse: {rmse_pred:.4f} | ssim: {ssim_pred:.4f} | psnr: '
-        '{psnr_pred:.4f} '.format(mae_pred=mae_pred,
-                                  mse_pred=mse_pred,
-                                  rmse_pred=rmse_pred,
-                                  ssim_pred=ssim_pred,
-                                  psnr_pred=psnr_pred))
-    return mse_pred, mae_pred, rmse_pred, ssim_pred, psnr_pred
-
-
-def save_test_comparison_images(im_pred, im_gt, epoch, num, save_path):
-    im_pred = np.array(im_pred)[0]
-    im_gt = np.array(im_gt)[0]
-    seq = range(im_pred.shape[0])
-    for idx in seq:
-        pd = im_pred[idx, :, :]
-        gt = im_gt[idx, :, :]
-        f = plt.figure()
-        f.add_subplot(1, 4, 1)
-        plt.imshow(pd, interpolation='none', cmap='gray')
-        plt.title("Output")
-        plt.axis("off")
-        f.add_subplot(1, 4, 2)
-        plt.imshow(gt, interpolation='none', cmap='gray')
-        plt.title("Target")
-        plt.axis("off")
-        f.add_subplot(1, 4, 3)
-        plt.imshow(gt - pd, interpolation='none', cmap='gray')
-        plt.title("Target - Output")
-        plt.axis("off")
-        f.add_subplot(1, 4, 4)
-        plt.imshow(pd - gt, interpolation='none', cmap='gray')
-        plt.title("Output - Target")
-        plt.axis("off")
-        file_path = os.path.join(save_path, 'ImageSlice_{}_{}_{}.png'.format(num, idx + 1, epoch))
-        f.savefig(file_path)
-        plt.close()
+    print("Save difference images in %s" % mode)
 
 
 class AverageMeter:

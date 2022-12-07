@@ -35,8 +35,8 @@ class TrainDataset(Dataset):
         vol_path = self.df.iloc[idx]['3D_data_path']
 
         volume = np.load(vol_path)
-        volume = volume - np.min(volume)
-        volume = volume / np.max(volume)
+        # volume = volume - np.min(volume)
+        # volume = volume / np.max(volume)
         volume = torch.from_numpy(volume).float()
 
         return projs, volume
