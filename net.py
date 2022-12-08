@@ -142,3 +142,27 @@ class Net(nn.Module):
         out = torch.squeeze(deconv1, 1)
         out = self.output_layer(out)
         return out
+
+
+class Discriminator(nn.Module):
+    def __init__(self, in_channels=46):
+        super(Discriminator, self).__init__()
+
+        def discriminator_block(in_filters, out_filters, normalization=True):
+            layers = [nn.Conv3d(in_filters, out_filters, kernel_size=4, stride=2, padding=1)]
+            if normalization:
+                layers.append(nn.InstanceNorm3d(out_filters))
+            layers.append(nn.LeakyReLU(0.2, inplace=True))
+            return layers
+
+        self.model = nn.Sequential(
+            *discriminator_block(in_channels, 64, normalization=False),
+            *discriminator_block(64, 128),
+            *discriminator_block(128, 256),
+            *discriminator_block(256, 512),
+            # nn.ZeroPad2d((1, 0, 1, 0)),
+            nn.Conv3d(512, 1, 4, padding=1, bias=False)
+        )
+
+    def forward(self, img):
+        return self.model(img)

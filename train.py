@@ -49,6 +49,14 @@ optimizer = torch.optim.Adam(model.parameters(), lr=0.01, betas=(0.5, 0.999))
 criterion = nn.SmoothL1Loss()
 criterion = criterion.to(device)
 
+patch = (1, input_height // 2 ** 4, input_width // 2 ** 4)
+discriminator = Discriminator()
+discriminator = discriminator.to(device)
+optimizer_D = torch.optim.Adam(discriminator.parameters(), lr=0.001, betas=(0.5, 0.999))
+criterion_GAN = torch.nn.MSELoss()
+criterion_GAN = criterion_GAN.to(device)
+
+
 train_loader = get_train_loader(file_path=file_path,
                                 input_height=input_height,
                                 input_width=input_width,
@@ -80,7 +88,15 @@ for epoch in range(epochs):
         input_var = input_var.to(device)
         target_var = target_var.to(device)
 
+        # Adversarial ground truths
+        valid = Variable(np.ones((input_var.size(0), *patch)), requires_grad=False)
+        fake = Variable(np.zeros((input_var.size(0), *patch)), requires_grad=False)
+
         output = model(input_var).float()
+
+        # GAN loss
+        pred_fake = discriminator(output)
+        loss_GAN = criterion_GAN(pred_fake, valid)  # MSELoss
 
         loss = criterion(output, target_var)
         train_loss.update(loss.data.item(), input.size(0))
@@ -88,6 +104,25 @@ for epoch in range(epochs):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
+
+        # ---------------------
+        #  Train Discriminator
+        # ---------------------
+
+        optimizer_D.zero_grad()
+
+        # Real loss
+        pred_real = discriminator(target_var)
+        loss_real = criterion_GAN(pred_real, valid)
+
+        # Fake loss
+        pred_fake = discriminator(output.detach())
+        loss_fake = criterion_GAN(pred_fake, fake)
+
+        # Total loss
+        loss_D = 0.5 * (loss_real + loss_fake)
+        loss_D.backward()
+        optimizer_D.step()
 
         if i % print_freq == 0 or i == len(train_loader) - 1:
             print('Epoch: [{0}] \t'
