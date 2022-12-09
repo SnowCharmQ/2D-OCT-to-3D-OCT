@@ -70,14 +70,14 @@ def get_error_metrics(im_pd, im_gt):
         rmse += rmse_pred
         psnr += psnr_pred
         ssim += ssim_pred
-    print(
-        'mse: {mse_pred:.4f} | mae: {mae_pred:.4f} | rmse: {rmse_pred:.4f} |'
-        ' psnr: {psnr_pred:.4f} | ssim: {ssim_pred:.4f}'.format(mse_pred=mse,
-                                                                mae_pred=mae,
-                                                                rmse_pred=rmse,
-                                                                psnr_pred=psnr,
-                                                                ssim_pred=ssim))
-    # return mse_pred, mae_pred, rmse_pred, psnr_pred, ssim_pred
+    # print(
+    #     'mse: {mse_pred:.4f} | mae: {mae_pred:.4f} | rmse: {rmse_pred:.4f} |'
+    #     ' psnr: {psnr_pred:.4f} | ssim: {ssim_pred:.4f}'.format(mse_pred=mse,
+    #                                                             mae_pred=mae,
+    #                                                             rmse_pred=rmse,
+    #                                                             psnr_pred=psnr,
+    #                                                             ssim_pred=ssim))
+    return mse, mae, rmse, psnr, ssim
 
 
 def generate_file_path(**kwargs):
@@ -117,10 +117,10 @@ def save_comparison_images(output, target, mode, **kwargs):
             plt.imshow(pd - gt, interpolation='none', cmap='gray')
             plt.title("Output - Target")
             plt.axis("off")
-            file_path = generate_file_path(result='', mode=mode, **kwargs, img="no{}.png".format(idx))
+            file_path = generate_file_path(result='', mode=mode, **kwargs, batch=batch, img="no{}.png".format(idx))
             f.savefig(file_path)
             plt.close()
-    print("Save difference images in %s" % mode)
+    # print("Save difference images in %s" % mode)
 
 
 class AverageMeter:
