@@ -26,7 +26,7 @@ output_height = 128
 output_width = 128
 transform = transforms.Compose([
     transforms.ToTensor(),
-    # transforms.Normalize((0.1307,), (0.3081,))
+    transforms.Normalize((0.1307,), (0.3081,))
 ])
 model = Net()
 # stat(model, (1, 128, 128))

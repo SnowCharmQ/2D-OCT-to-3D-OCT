@@ -50,8 +50,6 @@ def clean_data_npy(path: str):
 
 
 def get_error_metrics(im_pd, im_gt):
-    im_pd = np.array(im_pd).astype(np.float64)
-    im_gt = np.array(im_gt).astype(np.float64)
     im_pd = im_pd[0]
     im_gt = im_gt[0]
     size = im_pd.shape[0]
