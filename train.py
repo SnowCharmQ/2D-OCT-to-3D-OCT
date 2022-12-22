@@ -32,8 +32,8 @@ model = Net()
 # stat(model, (1, 128, 128))
 model = nn.DataParallel(model, device_ids=device_ids)
 model = model.to(device)
-optimizer = torch.optim.Adam(model.parameters(), lr=0.01, betas=(0.5, 0.999), weight_decay=0.01)
-scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.99)
+optimizer = torch.optim.Adam(model.parameters(), lr=0.01, betas=(0.5, 0.999))
+# scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 80, gamma=0.1, last_epoch=-1)
 criterion = nn.MSELoss(reduction='mean')
 criterion = criterion.to(device)
 
@@ -44,7 +44,6 @@ optimizer_D = torch.optim.Adam(discriminator.parameters(), lr=0.001, betas=(0.5,
 criterion_GAN = torch.nn.MSELoss()
 criterion_GAN = criterion_GAN.to(device)
 
-
 train_loader = get_train_loader(file_path=file_path,
                                 input_height=input_height,
                                 input_width=input_width,
@@ -52,8 +51,8 @@ train_loader = get_train_loader(file_path=file_path,
                                 output_width=output_width,
                                 transform=transform,
                                 batch_size=4,
-                                proportion=0.8,
-                                val_proportion=0.7)
+                                proportion=0.9,
+                                val_proportion=0.8)
 val_loader = get_val_loader(file_path=file_path,
                             input_height=input_height,
                             input_width=input_width,
@@ -61,8 +60,8 @@ val_loader = get_val_loader(file_path=file_path,
                             output_width=output_width,
                             transform=transform,
                             batch_size=1,
-                            proportion=0.8,
-                            val_proportion=0.7)
+                            proportion=0.9,
+                            val_proportion=0.8)
 test_loader = get_test_loader(file_path=file_path,
                               input_height=input_height,
                               input_width=input_width,
@@ -70,9 +69,9 @@ test_loader = get_test_loader(file_path=file_path,
                               output_width=output_width,
                               transform=transform,
                               batch_size=1,
-                              proportion=0.8)
+                              proportion=0.9)
 
-epochs = 500
+epochs = 100
 print_freq = 4
 best_train_loss = 1e5
 best_val_loss = 1e5
@@ -90,8 +89,12 @@ for epoch in range(epochs):
         target_var = target_var.to(device)
 
         # Adversarial ground truths
-        valid = Variable(np.ones((input_var.size(0), *patch)), requires_grad=False)
-        fake = Variable(np.zeros((input_var.size(0), *patch)), requires_grad=False)
+        valid = np.ones(input_var.size(0), *patch)
+        valid = torch.from_numpy(valid)
+        valid = Variable(valid, requires_grad=False)
+        fake = np.zeros(input_var.size(0), *patch)
+        fake = torch.from_numpy(fake)
+        fake = Variable(fake, requires_grad=False)
 
         output = model(input_var).float()
 
@@ -105,7 +108,7 @@ for epoch in range(epochs):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        scheduler.step()
+        # scheduler.step()
 
         # ---------------------
         #  Train Discriminator
@@ -113,15 +116,15 @@ for epoch in range(epochs):
 
         optimizer_D.zero_grad()
 
-        # Real loss
+        # # Real loss
         pred_real = discriminator(target_var)
         loss_real = criterion_GAN(pred_real, valid)
 
-        # Fake loss
+        # # Fake loss
         pred_fake = discriminator(output.detach())
         loss_fake = criterion_GAN(pred_fake, fake)
 
-        # Total loss
+        # # Total loss
         loss_D = 0.5 * (loss_real + loss_fake)
         loss_D.backward()
         optimizer_D.step()
@@ -188,7 +191,7 @@ for epoch in range(epochs):
                  'optimizer': optimizer.state_dict()}
         if not os.path.exists("model"):
             os.mkdir("model")
-        filename = os.path.join(os.getcwd(), "model", "model_train.pth.tar")
+        filename = os.path.join(os.getcwd(), "model", "model_val.pth.tar")
         torch.save(state, filename)
     e = time.time()
     print("Time used in validating one epoch: ", (e - s))

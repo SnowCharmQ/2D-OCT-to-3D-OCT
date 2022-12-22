@@ -50,6 +50,10 @@ def clean_data_npy(path: str):
 
 
 def get_error_metrics(im_pd, im_gt):
+    im_pd = np.array(im_pd).astype(np.float64)
+    im_pd = im_pd / np.max(im_pd)
+    im_gt = np.array(im_gt).astype(np.float64)
+    im_gt = im_gt / np.max(im_gt)
     im_pd = im_pd[0]
     im_gt = im_gt[0]
     size = im_pd.shape[0]
@@ -89,8 +93,8 @@ def generate_file_path(**kwargs):
 
 
 def save_comparison_images(output, target, mode, **kwargs):
-    output = output.cpu().detach().numpy()
-    target = target.cpu().detach().numpy()
+    output = np.array(output).astype(np.float64)
+    target = np.array(target).astype(np.float64)
     for batch in range(len(output)):
         output_batch = output[batch]
         target_batch = target[batch]
