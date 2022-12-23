@@ -89,10 +89,10 @@ for epoch in range(epochs):
         target_var = target_var.to(device)
 
         # Adversarial ground truths
-        valid = np.ones(input_var.size(0), *patch)
+        valid = np.ones((input_var.size(0), *patch))
         valid = torch.from_numpy(valid)
         valid = Variable(valid, requires_grad=False)
-        fake = np.zeros(input_var.size(0), *patch)
+        fake = np.zeros((input_var.size(0), *patch))
         fake = torch.from_numpy(fake)
         fake = Variable(fake, requires_grad=False)
 
@@ -104,6 +104,9 @@ for epoch in range(epochs):
 
         loss = criterion(output, target_var)
         train_loss.update(loss.data.item(), input.size(0))
+        # Total loss
+        # loss_total = loss_GAN + 50 * loss
+        # 两个loss相加才算用上了discriminator，50是一个超参数
 
         optimizer.zero_grad()
         loss.backward()
