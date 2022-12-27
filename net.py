@@ -145,7 +145,7 @@ class Net(nn.Module):
 
 
 class Discriminator(nn.Module):
-    def __init__(self, in_channels=46):
+    def __init__(self, in_channels=1):
         super(Discriminator, self).__init__()
 
         def discriminator_block(in_filters, out_filters, normalization=True):
