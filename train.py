@@ -52,7 +52,7 @@ train_loader = get_train_loader(file_path=file_path,
                                 transform=transform,
                                 batch_size=4,
                                 proportion=0.9,
-                                val_proportion=0.8)
+                                val_proportion=0.7)
 val_loader = get_val_loader(file_path=file_path,
                             input_height=input_height,
                             input_width=input_width,
@@ -61,7 +61,7 @@ val_loader = get_val_loader(file_path=file_path,
                             transform=transform,
                             batch_size=1,
                             proportion=0.9,
-                            val_proportion=0.8)
+                            val_proportion=0.7)
 test_loader = get_test_loader(file_path=file_path,
                               input_height=input_height,
                               input_width=input_width,
