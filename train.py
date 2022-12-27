@@ -1,5 +1,6 @@
 import gc
 import time
+import torch
 
 # from torchstat import stat
 from torchvision import transforms
@@ -99,10 +100,11 @@ for epoch in range(epochs):
         output = model(input_var).float()
 
         # GAN loss
-        pred_fake = discriminator(output)
+        output1 = torch.reshape(output, (4, 1, 46, 128, 128))
+        pred_fake = discriminator(output1)
         loss_GAN = criterion_GAN(pred_fake, valid)  # MSELoss
 
-        loss = criterion(output, target_var)
+        loss = criterion(output, target_var) * 50 + loss_GAN
         train_loss.update(loss.data.item(), input.size(0))
         # Total loss
         # loss_total = loss_GAN + 50 * loss
@@ -120,11 +122,11 @@ for epoch in range(epochs):
         optimizer_D.zero_grad()
 
         # # Real loss
-        pred_real = discriminator(target_var)
+        pred_real = discriminator(torch.reshape(target_var, (4, 1, 46, 128, 128)))
         loss_real = criterion_GAN(pred_real, valid)
 
         # # Fake loss
-        pred_fake = discriminator(output.detach())
+        pred_fake = discriminator(output1.detach())
         loss_fake = criterion_GAN(pred_fake, fake)
 
         # # Total loss
