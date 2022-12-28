@@ -1,6 +1,5 @@
 import gc
 import time
-import torch
 
 # from torchstat import stat
 from torchvision import transforms
@@ -53,7 +52,7 @@ train_loader = get_train_loader(file_path=file_path,
                                 transform=transform,
                                 batch_size=4,
                                 proportion=0.9,
-                                val_proportion=0.8)
+                                val_proportion=0.7)
 val_loader = get_val_loader(file_path=file_path,
                             input_height=input_height,
                             input_width=input_width,
@@ -62,7 +61,7 @@ val_loader = get_val_loader(file_path=file_path,
                             transform=transform,
                             batch_size=1,
                             proportion=0.9,
-                            val_proportion=0.8)
+                            val_proportion=0.7)
 test_loader = get_test_loader(file_path=file_path,
                               input_height=input_height,
                               input_width=input_width,
@@ -102,8 +101,8 @@ for epoch in range(epochs):
         output = model(input_var).float()
 
         # GAN loss
-        output1 = torch.reshape(output, (4, 1, 46, 128, 128))
-        pred_fake = discriminator(output1)
+        output = torch.reshape(output, (4, 1, 46, 128, 128))
+        pred_fake = discriminator(output)
         loss_GAN = criterion_GAN(pred_fake, valid)  # MSELoss
 
         loss = criterion(output, target_var) * 50 + loss_GAN
@@ -128,7 +127,7 @@ for epoch in range(epochs):
         loss_real = criterion_GAN(pred_real, valid)
 
         # # Fake loss
-        pred_fake = discriminator(output1.detach())
+        pred_fake = discriminator(output.detach())
         loss_fake = criterion_GAN(pred_fake, fake)
 
         # # Total loss
@@ -163,6 +162,7 @@ for epoch in range(epochs):
             os.mkdir("model")
         filename = os.path.join(os.getcwd(), "model", "model_train.pth.tar")
         torch.save(state, filename)
+        torch.save(model.state_dict(), "model_train.pkl")
         print("! Save the best model in epoch: {}, the current train loss: {}".format(epoch, best_train_loss))
 
     model.eval()
@@ -200,6 +200,7 @@ for epoch in range(epochs):
             os.mkdir("model")
         filename = os.path.join(os.getcwd(), "model", "model_val.pth.tar")
         torch.save(state, filename)
+        torch.save(model.state_dict(), "model_val.pkl")
     e = time.time()
     print("Time used in validating one epoch: ", (e - s))
     gc.collect()
