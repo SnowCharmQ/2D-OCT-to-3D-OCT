@@ -1,6 +1,5 @@
 import gc
 import time
-
 # from torchstat import stat
 from torchvision import transforms
 from torch.autograd import Variable
@@ -17,7 +16,7 @@ if not os.path.exists(file_path):
     generate()
 
 device = torch.device("cuda:0")
-device_ids = [0, 1, 2, 3, 4, 5, 6, 7]
+device_ids = [0]
 
 out_channels = 46
 input_height = 128
@@ -93,19 +92,26 @@ for epoch in range(epochs):
         valid = torch.from_numpy(valid)
         valid = Variable(valid, requires_grad=False)
         valid = torch.reshape(valid, (4, 1, 1, 8, 8))
+        valid = valid.to(device)
+        valid = valid.to(torch.float32)
         fake = np.zeros((input_var.size(0), *patch))
         fake = torch.from_numpy(fake)
         fake = Variable(fake, requires_grad=False)
         fake = torch.reshape(fake, (4, 1, 1, 8, 8))
+        fake = fake.to(device)
+        fake = fake.to(torch.float32)
 
         output = model(input_var).float()
 
         # GAN loss
-        output = torch.reshape(output, (4, 1, 46, 128, 128))
-        pred_fake = discriminator(output)
+        output_gan = torch.reshape(output, (4, 1, 46, 128, 128))
+        pred_fake = discriminator(output_gan)
+        pred_fake = pred_fake.to(torch.float32)
         loss_GAN = criterion_GAN(pred_fake, valid)  # MSELoss
 
-        loss = criterion(output, target_var) * 50 + loss_GAN
+        target_var = torch.reshape(target_var, (4, 1, 46, 128, 128))
+        loss = criterion(output_gan, target_var) * 50 + loss_GAN
+        loss = loss.to(torch.float32)
         train_loss.update(loss.data.item(), input.size(0))
         # Total loss
         # loss_total = loss_GAN + 50 * loss
@@ -123,11 +129,11 @@ for epoch in range(epochs):
         optimizer_D.zero_grad()
 
         # # Real loss
-        pred_real = discriminator(torch.reshape(target_var, (4, 1, 46, 128, 128)))
+        pred_real = discriminator(target_var)
         loss_real = criterion_GAN(pred_real, valid)
 
         # # Fake loss
-        pred_fake = discriminator(output.detach())
+        pred_fake = discriminator(output_gan.detach())
         loss_fake = criterion_GAN(pred_fake, fake)
 
         # # Total loss
