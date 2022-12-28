@@ -93,9 +93,11 @@ for epoch in range(epochs):
         valid = np.ones((input_var.size(0), *patch))
         valid = torch.from_numpy(valid)
         valid = Variable(valid, requires_grad=False)
+        valid = torch.reshape(valid, (4, 1, 1, 8, 8))
         fake = np.zeros((input_var.size(0), *patch))
         fake = torch.from_numpy(fake)
         fake = Variable(fake, requires_grad=False)
+        fake = torch.reshape(fake, (4, 1, 1, 8, 8))
 
         output = model(input_var).float()
 
