@@ -72,8 +72,8 @@ test_loader = get_test_loader(file_path=file_path,
 
 epochs = 100
 print_freq = 4
-best_train_loss = 1e5
-best_val_loss = 1e5
+best_train_loss = 1e7
+best_val_loss = 1e7
 
 print("Start training...")
 for epoch in range(epochs):
@@ -91,25 +91,25 @@ for epoch in range(epochs):
         valid = np.ones((input_var.size(0), *patch))
         valid = torch.from_numpy(valid)
         valid = Variable(valid, requires_grad=False)
-        valid = torch.reshape(valid, (4, 1, 1, 8, 8))
+        valid = valid.view(-1, 1, 1, 8, 8)
         valid = valid.to(device)
         valid = valid.to(torch.float32)
         fake = np.zeros((input_var.size(0), *patch))
         fake = torch.from_numpy(fake)
         fake = Variable(fake, requires_grad=False)
-        fake = torch.reshape(fake, (4, 1, 1, 8, 8))
+        fake = fake.view(-1, 1, 1, 8, 8)
         fake = fake.to(device)
         fake = fake.to(torch.float32)
 
         output = model(input_var).float()
 
         # GAN loss
-        output_gan = torch.reshape(output, (4, 1, 46, 128, 128))
+        output_gan = output.view(-1, 1, 46, 128, 128)
         pred_fake = discriminator(output_gan)
         pred_fake = pred_fake.to(torch.float32)
         loss_GAN = criterion_GAN(pred_fake, valid)  # MSELoss
 
-        target_var = torch.reshape(target_var, (4, 1, 46, 128, 128))
+        target_var = target_var.view(-1, 1, 46, 128, 128)
         loss = criterion(output_gan, target_var) * 50 + loss_GAN
         loss = loss.to(torch.float32)
         train_loss.update(loss.data.item(), input.size(0))
@@ -168,7 +168,7 @@ for epoch in range(epochs):
             os.mkdir("model")
         filename = os.path.join(os.getcwd(), "model", "model_train.pth.tar")
         torch.save(state, filename)
-        torch.save(model.state_dict(), "model_train.pkl")
+        torch.save(model.state_dict(), "model/model_train.pkl")
         print("! Save the best model in epoch: {}, the current train loss: {}".format(epoch, best_train_loss))
 
     model.eval()
@@ -206,7 +206,7 @@ for epoch in range(epochs):
             os.mkdir("model")
         filename = os.path.join(os.getcwd(), "model", "model_val.pth.tar")
         torch.save(state, filename)
-        torch.save(model.state_dict(), "model_val.pkl")
+        torch.save(model.state_dict(), "model/model_val.pkl")
     e = time.time()
     print("Time used in validating one epoch: ", (e - s))
     gc.collect()
