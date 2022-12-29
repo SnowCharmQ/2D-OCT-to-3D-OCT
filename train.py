@@ -27,7 +27,7 @@ transform = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize((0.1307,), (0.3081,))
 ])
-model = Net()
+model = ReconNet()
 # stat(model, (1, 128, 128))
 model = nn.DataParallel(model, device_ids=device_ids)
 model = model.to(device)
@@ -36,12 +36,12 @@ optimizer = torch.optim.Adam(model.parameters(), lr=0.01, betas=(0.5, 0.999))
 criterion = nn.MSELoss(reduction='mean')
 criterion = criterion.to(device)
 
-patch = (1, input_height // 2 ** 4, input_width // 2 ** 4)
-discriminator = Discriminator()
-discriminator = discriminator.to(device)
-optimizer_D = torch.optim.Adam(discriminator.parameters(), lr=0.001, betas=(0.5, 0.999))
-criterion_GAN = torch.nn.MSELoss()
-criterion_GAN = criterion_GAN.to(device)
+# patch = (1, input_height // 2 ** 4, input_width // 2 ** 4)
+# discriminator = Discriminator()
+# discriminator = discriminator.to(device)
+# optimizer_D = torch.optim.Adam(discriminator.parameters(), lr=0.001, betas=(0.5, 0.999))
+# criterion_GAN = torch.nn.MSELoss()
+# criterion_GAN = criterion_GAN.to(device)
 
 train_loader = get_train_loader(file_path=file_path,
                                 input_height=input_height,
@@ -70,7 +70,7 @@ test_loader = get_test_loader(file_path=file_path,
                               batch_size=1,
                               proportion=0.9)
 
-epochs = 100
+epochs = 300
 print_freq = 4
 best_train_loss = 1e7
 best_val_loss = 1e7
@@ -88,30 +88,31 @@ for epoch in range(epochs):
         target_var = target_var.to(device)
 
         # Adversarial ground truths
-        valid = np.ones((input_var.size(0), *patch))
-        valid = torch.from_numpy(valid)
-        valid = Variable(valid, requires_grad=False)
-        valid = valid.view(-1, 1, 1, 8, 8)
-        valid = valid.to(device)
-        valid = valid.to(torch.float32)
-        fake = np.zeros((input_var.size(0), *patch))
-        fake = torch.from_numpy(fake)
-        fake = Variable(fake, requires_grad=False)
-        fake = fake.view(-1, 1, 1, 8, 8)
-        fake = fake.to(device)
-        fake = fake.to(torch.float32)
+        # valid = np.ones((input_var.size(0), *patch))
+        # valid = torch.from_numpy(valid)
+        # valid = Variable(valid, requires_grad=False)
+        # valid = valid.view(-1, 1, 1, 8, 8)
+        # valid = valid.to(device)
+        # valid = valid.to(torch.float32)
+        # fake = np.zeros((input_var.size(0), *patch))
+        # fake = torch.from_numpy(fake)
+        # fake = Variable(fake, requires_grad=False)
+        # fake = fake.view(-1, 1, 1, 8, 8)
+        # fake = fake.to(device)
+        # fake = fake.to(torch.float32)
 
         output = model(input_var).float()
 
         # GAN loss
-        output_gan = output.view(-1, 1, 46, 128, 128)
-        pred_fake = discriminator(output_gan)
-        pred_fake = pred_fake.to(torch.float32)
-        loss_GAN = criterion_GAN(pred_fake, valid)  # MSELoss
-
-        target_var = target_var.view(-1, 1, 46, 128, 128)
-        loss = criterion(output_gan, target_var) * 50 + loss_GAN
-        loss = loss.to(torch.float32)
+        # output_gan = output.view(-1, 1, 46, 128, 128)
+        # pred_fake = discriminator(output_gan)
+        # pred_fake = pred_fake.to(torch.float32)
+        # loss_GAN = criterion_GAN(pred_fake, valid)  # MSELoss
+        #
+        # target_var = target_var.view(-1, 1, 46, 128, 128)
+        # loss = criterion(output_gan, target_var) * 50 + loss_GAN
+        # loss = loss.to(torch.float32)
+        loss = criterion(output, target_var)
         train_loss.update(loss.data.item(), input.size(0))
         # Total loss
         # loss_total = loss_GAN + 50 * loss
@@ -126,20 +127,20 @@ for epoch in range(epochs):
         #  Train Discriminator
         # ---------------------
 
-        optimizer_D.zero_grad()
-
-        # # Real loss
-        pred_real = discriminator(target_var)
-        loss_real = criterion_GAN(pred_real, valid)
-
-        # # Fake loss
-        pred_fake = discriminator(output_gan.detach())
-        loss_fake = criterion_GAN(pred_fake, fake)
-
-        # # Total loss
-        loss_D = 0.5 * (loss_real + loss_fake)
-        loss_D.backward()
-        optimizer_D.step()
+        # optimizer_D.zero_grad()
+        #
+        # # # Real loss
+        # pred_real = discriminator(target_var)
+        # loss_real = criterion_GAN(pred_real, valid)
+        #
+        # # # Fake loss
+        # pred_fake = discriminator(output_gan.detach())
+        # loss_fake = criterion_GAN(pred_fake, fake)
+        #
+        # # # Total loss
+        # loss_D = 0.5 * (loss_real + loss_fake)
+        # loss_D.backward()
+        # optimizer_D.step()
 
         if i % print_freq == 0 or i == len(train_loader) - 1:
             print('Epoch: [{0}] \t'
