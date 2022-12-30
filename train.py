@@ -102,22 +102,25 @@ for epoch in range(epochs):
         fake = fake.to(torch.float32)
 
         output = model(input_var).float()
+        output_gan = output.view(-1, 1, 46, 128, 128)
+        target_var = target_var.view(-1, 1, 46, 128, 128)
+
+        # ---------------------
+        #  Train Generator
+        # ---------------------
+
+        optimizer.zero_grad()
 
         # GAN loss
-        output_gan = output.view(-1, 1, 46, 128, 128)
         pred_fake = discriminator(output_gan)
         pred_fake = pred_fake.to(torch.float32)
         loss_GAN = criterion_GAN(pred_fake, valid)  # MSELoss
 
-        target_var = target_var.view(-1, 1, 46, 128, 128)
-        loss = criterion(output_gan, target_var) * 50 + loss_GAN
+        loss = criterion(output_gan, target_var) * 100 + loss_GAN  # 50是一个超参数可以改
         loss = loss.to(torch.float32)
-        train_loss.update(loss.data.item(), input.size(0))
-        # Total loss
-        # loss_total = loss_GAN + 50 * loss
-        # 两个loss相加才算用上了discriminator，50是一个超参数
 
-        optimizer.zero_grad()
+        train_loss.update(loss.data.item(), input.size(0))
+
         loss.backward()
         optimizer.step()
         # scheduler.step()
