@@ -50,7 +50,7 @@ train_loader = get_train_loader(file_path=file_path,
                                 output_width=output_width,
                                 transform=transform,
                                 batch_size=4,
-                                proportion=0.9,
+                                proportion=0.85,
                                 val_proportion=0.7)
 val_loader = get_val_loader(file_path=file_path,
                             input_height=input_height,
@@ -59,7 +59,7 @@ val_loader = get_val_loader(file_path=file_path,
                             output_width=output_width,
                             transform=transform,
                             batch_size=1,
-                            proportion=0.9,
+                            proportion=0.85,
                             val_proportion=0.7)
 test_loader = get_test_loader(file_path=file_path,
                               input_height=input_height,
@@ -68,9 +68,9 @@ test_loader = get_test_loader(file_path=file_path,
                               output_width=output_width,
                               transform=transform,
                               batch_size=1,
-                              proportion=0.9)
+                              proportion=0.85)
 
-epochs = 100
+epochs = 300
 print_freq = 4
 best_train_loss = 1e7
 best_val_loss = 1e7
@@ -175,6 +175,7 @@ for epoch in range(epochs):
     print("Start validating in epoch {}".format(epoch))
     s = time.time()
     mse, mae, rmse, psnr, ssim = 0, 0, 0, 0, 0
+    cnt = 0
     for i, (input, target) in enumerate(val_loader):
         input_var, target_var = Variable(input), Variable(target)
         input_var = input_var.to(device)
@@ -188,7 +189,13 @@ for epoch in range(epochs):
         rmse += rmse_pd
         psnr += psnr_pd
         ssim += ssim_pd
-    print('mse: {mse_pred:.4f} | mae: {mae_pred:.4f} | rmse: {rmse_pred:.4f} |'
+        cnt += 1
+    mse /= cnt
+    mae /= cnt
+    rmse /= cnt
+    psnr /= cnt
+    ssim /= cnt
+    print('Average mse: {mse_pred:.4f} | mae: {mae_pred:.4f} | rmse: {rmse_pred:.4f} |'
           ' psnr: {psnr_pred:.4f} | ssim: {ssim_pred:.4f}'
           .format(mse_pred=mse,
                   mae_pred=mae,
@@ -221,7 +228,12 @@ for i, (input, target) in enumerate(test_loader):
     gt = target.data.float().cpu()
     save_comparison_images(pd, gt, mode="test", iter=i)
     mse_pd, mae_pd, rmse_pd, psnr_pd, ssim_pd = get_error_metrics(pd, gt)
-    print('mse: {mse_pred:.4f} | mae: {mae_pred:.4f} | rmse: {rmse_pred:.4f} |'
+    mse_pd /= out_channels
+    mae_pd /= out_channels
+    rmse_pd /= out_channels
+    psnr_pd /= out_channels
+    ssim_pd /= out_channels
+    print('Average mse: {mse_pred:.4f} | mae: {mae_pred:.4f} | rmse: {rmse_pred:.4f} |'
           ' psnr: {psnr_pred:.4f} | ssim: {ssim_pred:.4f} in test {iter}'
           .format(mse_pred=mse_pd,
                   mae_pred=mae_pd,
