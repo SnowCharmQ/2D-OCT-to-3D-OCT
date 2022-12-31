@@ -7,4 +7,5 @@
 #SBATCH --ntasks-per-node=6
 #SBATCH --gres=gpu:1
 
+source activate olin
 python -u train.py
