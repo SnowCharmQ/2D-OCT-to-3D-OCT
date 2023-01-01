@@ -13,8 +13,10 @@ clean()
 if not os.path.exists(file_path):
     generate()
 
-device = torch.device("cuda:0")
-device_ids = [0]
+cuda_id = 0
+device_name = "cuda:{}".format(cuda_id)
+device = torch.device(device_name)
+device_ids = [cuda_id]
 
 out_channels = 46
 input_height = 128
@@ -31,7 +33,7 @@ model = nn.DataParallel(model, device_ids=device_ids)
 model = model.to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=0.01, betas=(0.5, 0.999))
 # scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 80, gamma=0.1, last_epoch=-1)
-criterion = nn.MSELoss(reduction='mean')
+criterion = nn.SmoothL1Loss()
 criterion = criterion.to(device)
 
 patch = (1, input_height // 2 ** 4, input_width // 2 ** 4)
