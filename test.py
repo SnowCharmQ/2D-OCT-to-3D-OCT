@@ -4,7 +4,7 @@ from torchvision import transforms
 from net import *
 from data import *
 from utils import *
-from data_processor.generator import generate
+from data_processor import *
 
 file_path = "data_path.csv"
 if not os.path.exists(file_path):
@@ -30,14 +30,12 @@ test_loader = get_test_loader(file_path=file_path,
                               batch_size=1,
                               proportion=0.8)
 
-model_name = 'model_train.pth.tar'
-ckpt_file = os.path.join("model", model_name)
-if os.path.isfile(ckpt_file):
-    checkpoint = torch.load(ckpt_file, map_location=torch.device('cpu'))
-    model.load_state_dict(checkpoint['state_dict'], False)
-    print("=> loaded checkpoint '{}' ".format(ckpt_file))
+model_name = 'model.pkl'
+model_file = os.path.join("model", model_name)
+if os.path.isfile(model_file):
+    model.load_state_dict(torch.load(model_file))
 else:
-    print("=> no checkpoint found at '{}'".format(ckpt_file))
+    print("=> no checkpoint found at '{}'".format(model_file))
     exit(0)
 
 model.eval()

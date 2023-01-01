@@ -3,9 +3,7 @@ import time
 # from torchstat import stat
 from torchvision import transforms
 from torch.autograd import Variable
-from data_processor.cleaner import clean
-from data_processor.generator import generate
-
+from data_processor import *
 from data import *
 from net import *
 from utils import *
