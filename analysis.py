@@ -1,4 +1,5 @@
 import os
+import math
 import matplotlib.pyplot as plt
 
 
@@ -35,6 +36,7 @@ for file_name in os.listdir('out'):
     epoch = 0
     x_axis = []
     train_loss = []
+    best_mse, best_mae, best_rmse, best_psnr, best_ssim = math.inf, math.inf, math.inf, -math.inf, -math.inf
     mses, maes, rmses, psnrs, ssims = [], [], [], [], []
     for line in lines:
         if line.startswith("Start training in epoch"):
@@ -51,8 +53,20 @@ for file_name in os.listdir('out'):
             rmses.append(rmse)
             psnrs.append(psnr)
             ssims.append(ssim)
+            if mse < best_mse:
+                best_mse = mse
+            if mae < best_mae:
+                best_mae = mae
+            if rmse < best_rmse:
+                best_rmse = rmse
+            if psnr > best_psnr:
+                best_psnr = psnr
+            if ssim > best_ssim:
+                best_ssim = ssim
         if line.startswith("Start testing"):
             break
+    print("{} | mse: {} | mae: {} | rmse: {} | psnr: {} | ssim: {}"
+          .format(file_name, best_mse, best_mae, best_rmse, best_psnr, best_ssim))
 
     dir_name = 'out/' + file_name.split(".")[0]
     if not os.path.exists(dir_name):
@@ -65,6 +79,7 @@ for file_name in os.listdir('out'):
     plt.ylabel("Loss")
     plt.title("Train Loss Chart")
     plt.savefig(dir_name + "/loss.png")
+    plt.close()
 
     plt.figure()
     plt.plot(x_axis, mses, '-', color='#4169E1', alpha=0.8, linewidth=1, label="MSE")
@@ -73,6 +88,7 @@ for file_name in os.listdir('out'):
     plt.ylabel("MSE")
     plt.title("Validation MSE Chart")
     plt.savefig(dir_name + "/mse.png")
+    plt.close()
 
     plt.figure()
     plt.plot(x_axis, maes, '-', color='#4169E1', alpha=0.8, linewidth=1, label="MAE")
@@ -81,6 +97,7 @@ for file_name in os.listdir('out'):
     plt.ylabel("MAE")
     plt.title("Validation MAE Chart")
     plt.savefig(dir_name + "/mae.png")
+    plt.close()
 
     plt.figure()
     plt.plot(x_axis, rmses, '-', color='#4169E1', alpha=0.8, linewidth=1, label="RMSE")
@@ -89,6 +106,7 @@ for file_name in os.listdir('out'):
     plt.ylabel("RMSE")
     plt.title("Validation RMSE Chart")
     plt.savefig(dir_name + "/rmse.png")
+    plt.close()
 
     plt.figure()
     plt.plot(x_axis, psnrs, '-', color='#4169E1', alpha=0.8, linewidth=1, label="PSNR")
@@ -97,6 +115,7 @@ for file_name in os.listdir('out'):
     plt.ylabel("PSNR")
     plt.title("Validation PSNR Chart")
     plt.savefig(dir_name + "/psnr.png")
+    plt.close()
 
     plt.figure()
     plt.plot(x_axis, ssims, '-', color='#4169E1', alpha=0.8, linewidth=1, label="SSIM")
@@ -105,3 +124,4 @@ for file_name in os.listdir('out'):
     plt.ylabel("SSIM")
     plt.title("Validation SSIM Chart")
     plt.savefig(dir_name + "/ssim.png")
+    plt.close()
