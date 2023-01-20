@@ -33,7 +33,7 @@ model = nn.DataParallel(model, device_ids=device_ids)
 model = model.to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=0.01, betas=(0.5, 0.999))
 # scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 80, gamma=0.1, last_epoch=-1)
-criterion = nn.SmoothL1Loss()
+criterion = nn.MSELoss(reduction='mean')
 criterion = criterion.to(device)
 
 patch = (1, input_height // 2 ** 4, input_width // 2 ** 4)
@@ -70,10 +70,11 @@ test_loader = get_test_loader(file_path=file_path,
                               batch_size=1,
                               proportion=0.85)
 
-epochs = 300
+epochs = 500
 print_freq = 4
 best_train_loss = 1e7
 best_val_loss = 1e7
+delta = 100
 
 print("Start training...")
 for epoch in range(epochs):
@@ -116,7 +117,7 @@ for epoch in range(epochs):
         pred_fake = pred_fake.to(torch.float32)
         loss_GAN = criterion_GAN(pred_fake, valid)  # MSELoss
 
-        loss = criterion(output_gan, target_var) * 100 + loss_GAN  # 50是一个超参数可以改
+        loss = criterion(output_gan, target_var) * delta + loss_GAN
         loss = loss.to(torch.float32)
 
         train_loss.update(loss.data.item(), input.size(0))
@@ -194,10 +195,15 @@ for epoch in range(epochs):
         ssim += ssim_pd
         cnt += 1
     mse /= cnt
+    mse /= out_channels
     mae /= cnt
+    mae /= out_channels
     rmse /= cnt
+    rmse /= out_channels
     psnr /= cnt
+    psnr /= out_channels
     ssim /= cnt
+    ssim /= out_channels
     print('Average mse: {mse_pred:.4f} | mae: {mae_pred:.4f} | rmse: {rmse_pred:.4f} |'
           ' psnr: {psnr_pred:.4f} | ssim: {ssim_pred:.4f}'
           .format(mse_pred=mse,
