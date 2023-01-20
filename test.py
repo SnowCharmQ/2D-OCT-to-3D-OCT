@@ -7,6 +7,7 @@ from utils import *
 from data_processor import *
 
 file_path = "data_path.csv"
+clean()
 if not os.path.exists(file_path):
     generate()
 
@@ -42,7 +43,7 @@ for model_name in os.listdir('model'):
 
     model_file = os.path.join("model", model_name)
     if os.path.isfile(model_file):
-        model.load_state_dict(torch.load(model_file))
+        model.load_state_dict(torch.load(model_file, map_location='cuda:0'))
     else:
         print("=> no checkpoint found at '{}'".format(model_file))
         exit(0)
