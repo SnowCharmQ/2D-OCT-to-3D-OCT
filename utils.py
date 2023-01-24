@@ -18,15 +18,10 @@ def generate_data_path(path: str):
             tif_path = os.path.join(path, filename)
         elif suffix == '.fda_OCT_pngs':
             images_path = os.path.join(path, filename)
-            volume = np.zeros((46, 128, 128), dtype=np.int64)
+            volume = np.zeros((128, 128, 128), dtype=np.int64)
             numbers = []
             for i in range(128):
-                if (i + 3) % 3 == 0:
-                    numbers.append(i)
-            numbers.append(49)
-            numbers.append(55)
-            numbers.append(59)
-            numbers.sort()
+                numbers.append(i)
             for i in range(len(numbers)):
                 oct_path = "octscan_%i.png" % (numbers[i] + 1)
                 oct_path = os.path.join(images_path, oct_path)

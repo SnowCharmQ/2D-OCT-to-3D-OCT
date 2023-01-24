@@ -20,7 +20,7 @@ device_name = "cuda:{}".format(cuda_id)
 device = torch.device(device_name)
 device_ids = [cuda_id]
 
-out_channels = 46
+out_channels = 128
 input_height = 128
 input_width = 128
 output_height = 128
