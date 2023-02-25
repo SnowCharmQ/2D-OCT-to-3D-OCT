@@ -282,7 +282,7 @@ def _make_layers(in_channels, output_channels, type, batch_norm=None, activation
 
 class ReconNet(nn.Module):
 
-    def __init__(self, in_channels=1, out_channels=46):
+    def __init__(self, in_channels=1, out_channels=128):
         super(ReconNet, self).__init__()
 
         ######### representation network - convolution layers

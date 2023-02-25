@@ -18,7 +18,7 @@ device_name = "cuda:{}".format(cuda_id)
 device = torch.device(device_name)
 device_ids = [cuda_id]
 
-out_channels = 46
+out_channels = 128
 input_height = 128
 input_width = 128
 output_height = 128
@@ -103,8 +103,8 @@ for epoch in range(epochs):
         fake = fake.to(torch.float32)
 
         output = model(input_var).float()
-        output_gan = output.view(-1, 1, 46, 128, 128)
-        target_var = target_var.view(-1, 1, 46, 128, 128)
+        output_gan = output.view(-1, 1, out_channels, input_height, input_width)
+        target_var = target_var.view(-1, 1, out_channels, input_height, input_width)
 
         # ---------------------
         #  Train Generator
@@ -182,7 +182,7 @@ for epoch in range(epochs):
     cnt = 0
     for i, (input, target) in enumerate(val_loader):
         input_var, target_var = Variable(input), Variable(target)
-        input_var = input_var.to(device)
+        # input_var = input_var.to(device)
         output = model(input_var)
         pd = output.data.float().cpu()
         gt = target.data.float().cpu()

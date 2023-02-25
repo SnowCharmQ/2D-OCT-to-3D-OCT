@@ -30,7 +30,7 @@ transform = transforms.Compose([
     transforms.Normalize((0.1307,), (0.3081,))
 ])
 
-model = Net()
+model = ReconNet()
 # stat(model, (1, 128, 128))
 model = nn.DataParallel(model, device_ids=device_ids)
 model = model.to(device)
